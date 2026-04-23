@@ -6,8 +6,9 @@ const ConversionSchema = new mongoose.Schema({
   clickId: { type: mongoose.Schema.Types.ObjectId, ref: "Click" },
   transactionId: { type: String },
   payout: { type: Number, required: true },
-  status: { type: String, enum: ["Pending", "Approved", "Rejected", "Paid"], default: "Pending" },
-  type: { type: String },
+  saleAmount: { type: Number, default: 0 }, // for Sale objective
+  objective: { type: String, default: "Conversions" },
+  status: { type: String, enum: ["Pending","Approved","Rejected","Paid"], default: "Pending" },
   ip: { type: String },
   country: { type: String },
   device: { type: String },
@@ -18,8 +19,5 @@ const ConversionSchema = new mongoose.Schema({
   rejectedAt: { type: Date },
   rejectionReason: { type: String },
 }, { timestamps: true });
-
-ConversionSchema.index({ campaignId: 1, createdAt: -1 });
-ConversionSchema.index({ affiliateId: 1, createdAt: -1 });
 
 export default mongoose.models.Conversion || mongoose.model("Conversion", ConversionSchema);
