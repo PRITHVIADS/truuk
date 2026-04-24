@@ -48,7 +48,7 @@ export default function ManageCampaigns(){
   return(
     <div className="space-y-6">
       <PageHeader title="Manage Campaigns" subtitle="View and manage all campaigns"
-        action={<button onClick={()=>{setForm(EMPTY);setError("");setModal("create");}} className="btn-primary px-4 py-2.5 text-sm flex items-center gap-2"><Plus size={16}/>Create Campaign</button>}/>
+        action={<a href="/campaigns/create" className="btn-primary px-4 py-2.5 text-sm flex items-center gap-2"><Plus size={16}/>Create Campaign</a>}/>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[["Total",campaigns.length,"#f97316"],["Active",campaigns.filter(c=>c.status==="Active").length,"#10b981"],["Paused",campaigns.filter(c=>c.status==="Paused").length,"#f59e0b"],["Draft",campaigns.filter(c=>c.status==="Draft").length,"#64748b"]].map(([l,v,c])=>(
