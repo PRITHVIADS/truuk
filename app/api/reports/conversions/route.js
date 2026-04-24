@@ -1,10 +1,9 @@
 import{NextResponse}from"next/server";import{getServerSession}from"next-auth";import{authOptions}from"@/app/api/auth/[...nextauth]/route";import{connectDB}from"@/lib/mongoose";import Conversion from"@/models/Conversion";import Campaign from"@/models/Campaign";import Affiliate from"@/models/Affiliate";
-export async function GET(req){
-  try{const session=await getServerSession(authOptions);if(!session)return NextResponse.json({error:"Unauthorized"},{status:401});await connectDB();const{searchParams}=new URL(req.url);const range=parseInt(searchParams.get("range")||"30");const page=parseInt(searchParams.get("page")||"1");const limit=50;const role=session.user.role;const userId=session.user.id;const since=new Date(Date.now()-range*24*60*60*1000);const query={createdAt:{$gte:since}};
-  if(role==="advertiser"){const mc=await Campaign.find({advertiser:userId}).select("_id").lean();query.campaignId={$in:mc.map(c=>c._id)};}
-  else if(role==="affiliate"){const aff=await Affiliate.findOne({email:session.user.email}).lean();query.affiliateId=aff?._id;}
-  const total=await Conversion.countDocuments(query);
-  const conversions=await Conversion.find(query).sort({createdAt:-1}).skip((page-1)*limit).limit(limit).populate("campaignId","name shortId objective currency").lean();
-  const result=conversions.map(conv=>({_id:conv._id,campaign:conv.campaignId?.name||"—",campaignShortId:conv.campaignId?.shortId||"—",objective:conv.campaignId?.objective||"Conversions",currency:conv.campaignId?.currency||"INR",publisherId:role==="affiliate"?undefined:(conv.affiliateId?.toString()||"—"),transactionId:conv.transactionId||"—",payout:conv.payout||0,saleAmount:conv.saleAmount||0,status:conv.status,createdAt:conv.createdAt}));
-  const totals=await Conversion.aggregate([{$match:query},{$group:{_id:null,totalPayout:{$sum:"$payout"},totalSale:{$sum:"$saleAmount"},count:{$sum:1}}}]);
-  return NextResponse.json({conversions:result,total,page,pages:Math.ceil(total/limit),totals:totals[0]||{}});}catch(err){return NextResponse.json({error:err.message},{status:500});}}
+export async function GET(req){try{const session=await getServerSession(authOptions);if(!session)return NextResponse.json({error:"Unauthorized"},{status:401});await connectDB();const{searchParams}=new URL(req.url);const range=parseInt(searchParams.get("range")||"30");const page=parseInt(searchParams.get("page")||"1");const limit=50;const role=session.user.role;const userId=session.user.id;const since=new Date(Date.now()-range*24*60*60*1000);const query={createdAt:{$gte:since}};
+if(role==="advertiser"){const mc=await Campaign.find({advertiser:userId}).select("_id").lean();query.campaignId={$in:mc.map(c=>c._id)};}
+else if(role==="affiliate"){const aff=await Affiliate.findOne({email:session.user.email}).lean();query.affiliateId=aff?._id;}
+const total=await Conversion.countDocuments(query);
+const conversions=await Conversion.find(query).sort({createdAt:-1}).skip((page-1)*limit).limit(limit).populate("campaignId","name shortId objective currency").lean();
+const result=conversions.map(c=>({campaign:c.campaignId?.name||"—",campaignShortId:c.campaignId?.shortId||"—",objective:c.campaignId?.objective||"Conversions",currency:c.campaignId?.currency||"INR",publisherId:role==="affiliate"?undefined:(c.affiliateId?.toString()||"—"),transactionId:c.transactionId||"—",payout:c.payout||0,saleAmount:c.saleAmount||0,status:c.status,createdAt:c.createdAt}));
+const totals=await Conversion.aggregate([{$match:query},{$group:{_id:null,totalPayout:{$sum:"$payout"},totalSale:{$sum:"$saleAmount"},count:{$sum:1}}}]);
+return NextResponse.json({conversions:result,total,page,pages:Math.ceil(total/limit),totals:totals[0]||{}});}catch(err){return NextResponse.json({error:err.message},{status:500});}}
