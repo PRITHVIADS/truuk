@@ -23,7 +23,7 @@ export default function ClickReport(){
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead><tr className="border-b border-white/5" style={{background:"rgba(255,255,255,0.03)"}}>
-                {["Click ID","Campaign",role!=="affiliate"&&"Publisher ID","Device","OS","Country",role==="admin"&&"IP","Source",role!=="advertiser"&&"Referrer","Sub1","Status","Time"].filter(Boolean).map(h=><th key={h} className="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">{h}</th>)}
+                {["Click ID","Campaign",role!=="affiliate"&&"Publisher ID","Device","OS","Country",role==="admin"&&"IP","Source",(role==="admin"||role==="affiliate")&&"Referrer","Sub1","Status","Time"].filter(Boolean).map(h=><th key={h} className="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">{h}</th>)}
               </tr></thead>
               <tbody>{clicks.map((c,i)=>(
                 <tr key={i} className={`border-b border-white/5 hover:bg-white/[0.02] ${c.isBot?"opacity-40":""}`}>
@@ -35,12 +35,12 @@ export default function ClickReport(){
                   <td className="py-2.5 px-4 text-slate-300">{c.country||"—"}</td>
                   {role==="admin"&&<td className="py-2.5 px-4"><code className="text-slate-400 font-mono">{c.ip}</code></td>}
                   <td className="py-2.5 px-4 text-slate-400">{c.source||"—"}</td>
-                  {role!=="advertiser"&&<td className="py-2.5 px-4 text-blue-400 text-xs max-w-[120px] truncate">{c.referer?c.referer.replace(/https?:\/\/(www\.)?/,"").split("/")[0]:"—"}</td>}
+                  {(role==="admin"||role==="affiliate")&&<td className="py-2.5 px-4 text-blue-400 text-xs max-w-[120px] truncate">{c.referer?c.referer.replace(/https?:\/\/(www\.)?/,"").split("/")[0]:"—"}</td>}
                   <td className="py-2.5 px-4 text-slate-400">{c.sub1||"—"}</td>
                   <td className="py-2.5 px-4">
                     {c.isBot&&<span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">Bot</span>}
                     {c.isDuplicate&&<span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 text-xs">Dup</span>}
-                    {!c.isBot&&!c.isDuplicate&&<span className="px-1.5 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">✓ Valid</span>}
+                    {!c.isBot&&!c.isDuplicate&&<span className="px-1.5 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">✓</span>}
                   </td>
                   <td className="py-2.5 px-4 text-slate-500 whitespace-nowrap">{new Date(c.createdAt).toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</td>
                 </tr>
