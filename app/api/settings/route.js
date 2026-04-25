@@ -1,31 +1,6 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { connectDB } from "@/lib/mongoose";
-import User from "@/models/User";
-
-export async function GET(req) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    await connectDB();
-    const user = await User.findById(session.user.id).select("-password").lean();
-    return NextResponse.json({ user });
-  } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
-}
-
-export async function PATCH(req) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    await connectDB();
-    const body = await req.json();
-    delete body.password; delete body.role; // protect sensitive fields
-    const user = await User.findByIdAndUpdate(session.user.id, body, { new: true }).select("-password");
-    return NextResponse.json({ user });
-  } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
-}
+import{NextResponse}from"next/server";import{getServerSession}from"next-auth";import{authOptions}from"@/app/api/auth/[...nextauth]/route";import{connectDB}from"@/lib/mongoose";import User from"@/models/User";import Affiliate from"@/models/Affiliate";import bcrypt from"bcryptjs";
+export async function GET(req){try{const session=await getServerSession(authOptions);if(!session)return NextResponse.json({error:"Unauthorized"},{status:401});await connectDB();if(session.user.role==="affiliate"){const aff=await Affiliate.findOne({email:session.user.email}).lean();return NextResponse.json({user:aff,role:"affiliate"});}const user=await User.findById(session.user.id).select("-password").lean();return NextResponse.json({user,role:session.user.role});}catch(err){return NextResponse.json({error:err.message},{status:500});}}
+export async function PATCH(req){try{const session=await getServerSession(authOptions);if(!session)return NextResponse.json({error:"Unauthorized"},{status:401});await connectDB();const body=await req.json();const{name,company,phone,website,postbackUrl,paymentMethod,currentPassword,newPassword}=body;
+if(session.user.role==="affiliate"){const aff=await Affiliate.findOne({email:session.user.email});if(name)aff.name=name;if(company!==undefined)aff.company=company;if(phone!==undefined)aff.phone=phone;if(website!==undefined)aff.website=website;if(postbackUrl!==undefined)aff.postbackUrl=postbackUrl;if(paymentMethod)aff.paymentMethod=paymentMethod;await aff.save();return NextResponse.json({success:true});}
+const user=await User.findById(session.user.id);if(newPassword){if(!currentPassword)return NextResponse.json({error:"Current password required"},{status:400});const valid=await bcrypt.compare(currentPassword,user.password);if(!valid)return NextResponse.json({error:"Current password is incorrect"},{status:400});if(newPassword.length<8)return NextResponse.json({error:"Password must be 8+ characters"},{status:400});user.password=newPassword;}
+if(name)user.name=name;if(company!==undefined)user.company=company;if(phone!==undefined)user.phone=phone;if(website!==undefined)user.website=website;await user.save();return NextResponse.json({success:true});}catch(err){return NextResponse.json({error:err.message},{status:500});}}
