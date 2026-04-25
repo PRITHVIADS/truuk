@@ -1,103 +1,70 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Zap, Building2, Users } from "lucide-react";
-
-export default function SignupPage() {
-  const router = useRouter();
-  const [role, setRole] = useState("");
-  const [form, setForm] = useState({ name:"", email:"", password:"", company:"", phone:"", website:"" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-
-  const f = (k,v) => setForm(p=>({...p,[k]:v}));
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!role) { setError("Please select your role"); return; }
-    setLoading(true); setError("");
-    const r = await fetch("/api/auth/signup", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({...form, role}) });
-    const d = await r.json();
-    if (!r.ok) { setError(d.error || "Signup failed"); setLoading(false); return; }
-    setSuccess(true);
-    setLoading(false);
+import{useState}from"react";import{useRouter}from"next/navigation";import{Eye,EyeOff,CheckCircle,ArrowRight,Megaphone,Users}from"lucide-react";
+export default function SignupPage(){
+  const router=useRouter();
+  const[role,setRole]=useState(null);
+  const[saving,setSaving]=useState(false);
+  const[error,setError]=useState("");
+  const[showPass,setShowPass]=useState(false);
+  const[form,setForm]=useState({name:"",email:"",password:"",company:"",phone:"",website:"",paymentMethod:"Bank Transfer"});
+  const f=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const handleSubmit=async()=>{
+    if(!form.name){setError("Full name is required");return;}
+    if(!form.email){setError("Email is required");return;}
+    if(!form.password||form.password.length<8){setError("Password must be at least 8 characters");return;}
+    setSaving(true);setError("");
+    const r=await fetch(role==="advertiser"?"/api/auth/signup/advertiser":"/api/auth/signup/publisher",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...form,role})});
+    const d=await r.json();
+    if(!r.ok){setError(d.error||"Error");setSaving(false);return;}
+    router.push(`/signup/success?role=${role}&email=${form.email}`);
   };
-
-  if (success) return (
-    <div className="min-h-screen flex items-center justify-center" style={{background:"#080c14"}}>
-      <div className="card p-8 max-w-md w-full text-center animate-slide-up">
-        <div className="text-5xl mb-4">🎉</div>
-        <h2 className="text-2xl font-black text-white mb-2">Account Created!</h2>
-        <p className="text-slate-400 mb-6">Your account is pending admin approval. You'll be able to login once approved. This usually takes a few hours.</p>
-        <Link href="/login" className="btn-primary px-6 py-3 text-sm inline-block">Go to Login</Link>
+  if(!role)return(
+    <div className="min-h-screen flex items-center justify-center p-4" style={{background:"#080c14"}}>
+      <div className="w-full max-w-2xl">
+        <div className="text-center mb-10">
+          <div className="w-14 h-14 rounded-2xl bg-orange-500 flex items-center justify-center mx-auto mb-4 text-2xl font-black text-white">T</div>
+          <h1 className="text-3xl font-black text-white mb-2">Join Truuk</h1>
+          <p className="text-slate-400">The performance affiliate marketing platform</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {[{role:"advertiser",icon:"📢",title:"I'm an Advertiser",desc:"Promote my products and pay publishers for results",color:"blue",points:["Create performance campaigns","Pay only for results","Access publisher network","Real-time tracking"]},{role:"affiliate",icon:"💰",title:"I'm a Publisher",desc:"Promote campaigns and earn commissions on every conversion",color:"green",points:["Browse & join campaigns","Earn on every conversion","Real-time earnings dashboard","Unique tracking links"]}].map(opt=>(
+            <button key={opt.role} onClick={()=>setRole(opt.role)} className="p-6 rounded-2xl border text-left hover:scale-[1.02] transition-all group" style={{background:"rgba(255,255,255,0.025)",borderColor:"rgba(255,255,255,0.07)"}}>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 ${opt.color==="blue"?"bg-blue-500/15":"bg-green-500/15"}`}>{opt.icon}</div>
+              <h2 className="text-white font-black text-lg mb-1">{opt.title}</h2>
+              <p className="text-slate-500 text-sm mb-4">{opt.desc}</p>
+              <div className="space-y-1.5">{opt.points.map(p=><div key={p} className="flex items-center gap-2"><CheckCircle size={13} className={opt.color==="blue"?"text-blue-400":"text-green-400"}/><span className="text-xs text-slate-400">{p}</span></div>)}</div>
+              <div className={`mt-5 flex items-center gap-2 text-sm font-bold ${opt.color==="blue"?"text-blue-400":"text-green-400"}`}>Get started <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform"/></div>
+            </button>
+          ))}
+        </div>
+        <p className="text-center text-slate-500 text-sm mt-6">Already have an account? <a href="/login" className="text-orange-400 font-semibold">Sign in</a></p>
       </div>
     </div>
   );
-
-  return (
-    <div className="min-h-screen flex items-center justify-center page-glow relative py-10" style={{background:"#080c14"}}>
-      <div className="absolute inset-0" style={{background:"radial-gradient(ellipse 60% 50% at 50% 0%, rgba(249,115,22,0.1) 0%, transparent 65%)"}}/>
-      <div className="relative w-full max-w-lg px-4">
-        <div className="card p-8 animate-slide-up">
-          <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-orange-500/20">
-              <Zap size={22} className="text-white"/>
-            </div>
-            <h1 className="text-2xl font-black text-white">Join Truuk</h1>
-            <p className="text-slate-500 text-sm mt-1">Create your account to get started</p>
-          </div>
-
-          {/* Role Selection */}
-          <div className="mb-6">
-            <p className="text-xs text-slate-400 font-semibold mb-3 uppercase tracking-wider">I am a...</p>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { value:"advertiser", icon:Building2, title:"Advertiser", desc:"I want to run campaigns and drive conversions" },
-                { value:"affiliate", icon:Users, title:"Affiliate / Publisher", desc:"I want to promote campaigns and earn commissions" },
-              ].map(({value,icon:Icon,title,desc}) => (
-                <button key={value} onClick={()=>setRole(value)}
-                  className={`p-4 rounded-xl border text-left transition-all ${role===value ? "border-orange-500 bg-orange-500/10" : "border-white/10 bg-white/5 hover:bg-white/8"}`}>
-                  <Icon size={20} className={role===value?"text-orange-400":"text-slate-400"} />
-                  <p className={`font-bold text-sm mt-2 ${role===value?"text-orange-400":"text-white"}`}>{title}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="text-xs text-slate-400 font-semibold block mb-1.5">Full Name *</label>
-                <input value={form.name} onChange={e=>f("name",e.target.value)} required className="input" placeholder="Your name"/></div>
-              <div><label className="text-xs text-slate-400 font-semibold block mb-1.5">Email *</label>
-                <input type="email" value={form.email} onChange={e=>f("email",e.target.value)} required className="input" placeholder="you@email.com"/></div>
-            </div>
-            <div><label className="text-xs text-slate-400 font-semibold block mb-1.5">Password * (min 6 chars)</label>
-              <input type="password" value={form.password} onChange={e=>f("password",e.target.value)} required className="input" placeholder="••••••••"/></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="text-xs text-slate-400 font-semibold block mb-1.5">Company / Brand</label>
-                <input value={form.company} onChange={e=>f("company",e.target.value)} className="input" placeholder="Company name"/></div>
-              <div><label className="text-xs text-slate-400 font-semibold block mb-1.5">Phone</label>
-                <input value={form.phone} onChange={e=>f("phone",e.target.value)} className="input" placeholder="+91 …"/></div>
-            </div>
-            {role==="affiliate" && (
-              <div><label className="text-xs text-slate-400 font-semibold block mb-1.5">Website / Social Profile</label>
-                <input value={form.website} onChange={e=>f("website",e.target.value)} className="input" placeholder="https://yoursite.com"/></div>
-            )}
-
-            {error && <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2 text-red-400 text-sm">{error}</div>}
-
-            <button type="submit" disabled={loading||!role} className="btn-primary w-full py-3 text-sm disabled:opacity-50 mt-2">
-              {loading ? "Creating Account…" : "Create Account"}
-            </button>
-          </form>
-
-          <p className="text-center text-xs text-slate-600 mt-5">
-            Already have an account? <Link href="/login" className="text-orange-400 hover:text-orange-300">Sign in</Link>
-          </p>
+  const isAdv=role==="advertiser";
+  return(
+    <div className="min-h-screen flex items-center justify-center p-4" style={{background:"#080c14"}}>
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="w-12 h-12 rounded-2xl bg-orange-500 flex items-center justify-center mx-auto mb-4 text-xl font-black text-white">T</div>
+          <h1 className="text-2xl font-black text-white">Create your
+cat > app/signup/success/page.js << 'ENDOFFILE'
+"use client";
+import{useSearchParams}from"next/navigation";import{CheckCircle}from"lucide-react";
+export default function SignupSuccess(){
+  const params=useSearchParams();const role=params.get("role");const email=params.get("email");
+  return(
+    <div className="min-h-screen flex items-center justify-center p-4" style={{background:"#080c14"}}>
+      <div className="w-full max-w-md text-center">
+        <div className="w-16 h-16 rounded-full bg-green-500/15 flex items-center justify-center mx-auto mb-5"><CheckCircle size={32} className="text-green-400"/></div>
+        <h1 className="text-2xl font-black text-white mb-2">Account Created! 🎉</h1>
+        <p className="text-slate-400 mb-6">Your {role} account has been submitted. An admin will review and activate it shortly.</p>
+        <div className="rounded-2xl border p-5 mb-6 text-left space-y-3" style={{background:"rgba(255,255,255,0.025)",borderColor:"rgba(255,255,255,0.07)"}}>
+          <div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-green-500/15 flex items-center justify-center"><CheckCircle size={14} className="text-green-400"/></div><div><p className="text-white text-sm font-semibold">Account registered</p><p className="text-slate-500 text-xs">{email}</p></div></div>
+          <div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center"><span className="text-amber-400 text-xs font-bold">2</span></div><div><p className="text-white text-sm font-semibold">Pending admin review</p><p className="text-slate-500 text-xs">Usually within 24 hours</p></div></div>
+          <div className="flex items-center gap-3 opacity-40"><div className="w-8 h-8 rounded-full bg-blue-500/15 flex items-center justify-center"><span className="text-blue-400 text-xs font-bold">3</span></div><div><p className="text-white text-sm font-semibold">Account activated</p><p className="text-slate-500 text-xs">You can then login</p></div></div>
         </div>
+        <a href="/login" className="btn-primary px-6 py-3 text-sm inline-block">Go to Login →</a>
       </div>
     </div>
   );
