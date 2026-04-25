@@ -3,48 +3,63 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/lib/mongoose";
 import Campaign from "@/models/Campaign";
+import Affiliate from "@/models/Affiliate";
 import CampaignApplication from "@/models/CampaignApplication";
 
-// Affiliate marketplace — shows Public + Approval Required campaigns
 export async function GET(req) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     await connectDB();
-
     const { searchParams } = new URL(req.url);
-    const category = searchParams.get("category");
-    const type = searchParams.get("type");
-    const token = searchParams.get("token"); // for private campaigns
+    const search = searchParams.get("search") || "";
+    const category = searchParams.get("category") || "";
 
-    // Build query — affiliates can see Public and Approval Required
-    const query = { status: "Active", visibility: { $in: ["Public", "Approval Required"] } };
-    if (category) query.category = category;
-    if (type) query.type = type;
-
-    // If token provided, also include matching private campaign
-    let privateCampaign = null;
-    if (token) privateCampaign = await Campaign.findOne({ privateToken: token, status: "Active" }).lean();
+    const query = { status: "Active", visibility: { $in: ["Public", "Ask for Permission"] } };
+    if (search) query.name = { $regex: search, $options: "i" };
+    if (category) query.category = { $regex: category, $options: "i" };
 
     const campaigns = await Campaign.find(query)
-      .populate("createdBy", "name company")
-      .sort({ createdAt: -1 }).lean();
+      .select("_id name shortId description objective payout revenue currency geo category trafficChannels visibility clicks conversions createdAt")
+      .sort({ clicks: -1 })
+      .lean();
 
-    if (privateCampaign) campaigns.unshift(privateCampaign);
-
-    // Get affiliate's applications
-    let applications = [];
-    if (session.user.role === "affiliate") {
-      applications = await CampaignApplication.find({ affiliateId: session.user.id }).lean();
+    // Get affiliate's existing applications
+    const aff = await Affiliate.findOne({ email: session.user.email }).lean();
+    let myApplications = [];
+    if (aff) {
+      const apps = await CampaignApplication.find({ affiliateId: aff._id }).select("campaignId status").lean();
+      myApplications = apps.map(a => ({ campaignId: a.campaignId.toString(), status: a.status }));
     }
 
-    // Mark each campaign with affiliate's status
-    const enriched = campaigns.map(c => {
-      const app = applications.find(a => a.campaignId.toString() === c._id.toString());
-      return { ...c, applicationStatus: app?.status || null, applicationId: app?._id || null };
-    });
+    return NextResponse.json({ campaigns, myApplications, affiliateId: aff?._id });
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
 
-    return NextResponse.json({ campaigns: enriched });
+export async function POST(req) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    await connectDB();
+    const { campaignId } = await req.json();
+    const aff = await Affiliate.findOne({ email: session.user.email }).lean();
+    if (!aff) return NextResponse.json({ error: "Publisher not found" }, { status: 404 });
+    const campaign = await Campaign.findById(campaignId).lean();
+    if (!campaign) return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
+
+    const existing = await CampaignApplication.findOne({ campaignId, affiliateId: aff._id });
+    if (existing) return NextResponse.json({ error: "Already applied" }, { status: 400 });
+
+    const status = campaign.visibility === "Public" ? "Approved" : "Pending";
+    await CampaignApplication.create({ campaignId, affiliateId: aff._id, status });
+
+    if (status === "Approved") {
+      await Campaign.findByIdAndUpdate(campaignId, { $addToSet: { approvedAffiliates: aff._id } });
+    }
+
+    return NextResponse.json({ success: true, status });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

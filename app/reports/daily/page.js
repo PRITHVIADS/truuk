@@ -1,60 +1,120 @@
 "use client";
 import { useEffect, useState } from "react";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { PageHeader, FilterTabs, Spinner } from "@/components/ui";
+import { useSession } from "next-auth/react";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { PageHeader, Spinner } from "@/components/ui";
+import { Download, TrendingUp, TrendingDown } from "lucide-react";
+import DateRangePicker from "@/components/ui/DateRangePicker";
 
-const TT={background:"#0f172a",border:"1px solid #1e293b",borderRadius:10,color:"#fff",fontSize:12};
-const TITLE={"campaigns":"Campaigns Report","publishers":"Publishers Report","advertisers":"Advertisers Report","daily":"Daily Report","clicks":"Click Report","conversions":"Conversion Report"}["daily"];
-const SUBTITLE={"campaigns":"Performance breakdown by campaign","publishers":"Performance breakdown by publisher","advertisers":"Performance breakdown by advertiser","daily":"Day by day performance","clicks":"All click activity","conversions":"All conversion activity"}["daily"];
+const TT = { background:"#0f172a", border:"1px solid #1e293b", borderRadius:10, color:"#fff", fontSize:12 };
+const today = new Date().toISOString().split("T")[0];
+const ago = (d) => { const x = new Date(); x.setDate(x.getDate()-d); return x.toISOString().split("T")[0]; };
 
-export default function ReportPage(){
-  const [data,setData]=useState(null);
-  const [loading,setLoading]=useState(true);
-  const [range,setRange]=useState("30");
+export default function DailyReport() {
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [dr, setDr] = useState({ from: ago(30), to: today });
 
-  useEffect(()=>{
-    fetch(`/api/reports?range=${range}`).then(r=>r.json()).then(d=>{setData(d);setLoading(false);}).catch(()=>setLoading(false));
-  },[range]);
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/reports/daily?from=${dr.from}&to=${dr.to}`)
+      .then(r => r.json()).then(d => { setData(d); setLoading(false); }).catch(() => setLoading(false));
+  }, [dr]);
 
-  const timeline=data?.timelineData||[];
-  const totalClicks=timeline.reduce((s,d)=>s+d.clicks,0);
-  const totalConv=timeline.reduce((s,d)=>s+d.conversions,0);
-  const totalRev=timeline.reduce((s,d)=>s+d.revenue,0);
-  const fmt=(n)=>n>=100000?`₹${(n/100000).toFixed(1)}L`:n>=1000?`₹${(n/1000).toFixed(1)}K`:`₹${n}`;
+  const rows = data?.rows || [];
+  const totals = data?.totals || {};
+  const fmt = (n) => n >= 1000 ? `₹${(n/1000).toFixed(1)}K` : `₹${(n||0).toFixed(0)}`;
+  const card = { background: "rgba(255,255,255,0.025)", borderColor: "rgba(255,255,255,0.07)" };
+  const chartData = [...rows].reverse();
 
-  return(
-    <div className="space-y-6">
-      <PageHeader title={TITLE} subtitle={SUBTITLE}
-        action={<div className="flex gap-2"><FilterTabs options={["7","30","90"]} value={range} onChange={setRange}/><button className="btn-ghost px-3 py-1.5 text-xs">Export CSV</button></div>}/>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[["Total Clicks",totalClicks.toLocaleString(),"#3b82f6"],["Conversions",totalConv.toLocaleString(),"#10b981"],["CR%",totalClicks?((totalConv/totalClicks)*100).toFixed(2)+"%":"0%","#f97316"],["Revenue",fmt(totalRev),"#a855f7"]].map(([l,v,c])=>(
-          <div key={l} className="rounded-2xl border p-5" style={{background:"rgba(255,255,255,0.025)",borderColor:"rgba(255,255,255,0.07)"}}>
-            <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mb-3">{l}</p>
-            <p className="text-3xl font-black" style={{color:c}}>{v}</p>
+  return (
+    <div className="space-y-5">
+      <PageHeader title="Daily Report" subtitle="Day by day performance breakdown"
+        action={<div className="flex gap-2">
+          <DateRangePicker from={dr.from} to={dr.to} onChange={setDr}/>
+          <button className="btn-ghost px-3 py-2 text-xs flex items-center gap-1"><Download size={12}/>Export</button>
+        </div>}/>
+
+      {/* Totals */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        {[["Clicks", totals.clicks||0, "#3b82f6"], ["Unique", totals.uniqueClicks||0, "#06b6d4"], ["Conv.", totals.conversions||0, "#10b981"], ["CR%", (totals.cr||"0")+"%", "#a855f7"], ["Revenue", fmt(totals.revenue||0), "#f97316"]].map(([l,v,c]) => (
+          <div key={l} className="rounded-2xl border p-4" style={card}>
+            <p className="text-xs text-slate-500 uppercase font-bold mb-2">{l}</p>
+            <p className="text-2xl font-black" style={{color:c}}>{v}</p>
           </div>
         ))}
       </div>
-      {loading?<div className="flex justify-center py-20"><Spinner/></div>:
-      <div className="rounded-2xl border p-5" style={{background:"rgba(255,255,255,0.025)",borderColor:"rgba(255,255,255,0.07)"}}>
-        <p className="text-sm font-bold text-slate-300 mb-4">Performance Timeline</p>
-        {timeline.length>0?<ResponsiveContainer width="100%" height={250}>
-          <AreaChart data={timeline}>
-            <defs>
-              <linearGradient id="gc" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient>
-              <linearGradient id="gr" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f97316" stopOpacity={0.2}/><stop offset="95%" stopColor="#f97316" stopOpacity={0}/></linearGradient>
-            </defs>
-            <XAxis dataKey="date" tick={{fill:"#64748b",fontSize:10}} axisLine={false} tickLine={false}/>
-            <YAxis tick={{fill:"#64748b",fontSize:10}} axisLine={false} tickLine={false}/>
-            <Tooltip contentStyle={TT}/>
-            <Area type="monotone" dataKey="clicks" stroke="#3b82f6" fill="url(#gc)" strokeWidth={2} dot={false}/>
-            <Area type="monotone" dataKey="conversions" stroke="#10b981" fill="none" strokeWidth={2} dot={false}/>
-            <Area type="monotone" dataKey="revenue" stroke="#f97316" fill="url(#gr)" strokeWidth={2} dot={false}/>
-          </AreaChart>
-        </ResponsiveContainer>:<div className="flex items-center justify-center h-48 text-slate-600">No data for this period</div>}
-        <div className="flex gap-4 mt-2">
-          {[["Clicks","#3b82f6"],["Conversions","#10b981"],["Revenue","#f97316"]].map(([l,c])=>(<span key={l} className="flex items-center gap-1.5 text-xs text-slate-400"><span className="w-3 h-0.5 rounded inline-block" style={{background:c}}/>{l}</span>))}
+
+      {loading ? <div className="flex justify-center py-20"><Spinner/></div> : <>
+        {/* Chart */}
+        <div className="rounded-2xl border p-5" style={card}>
+          <p className="text-sm font-bold text-slate-300 mb-4">Performance Trend</p>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="gc" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient>
+                <linearGradient id="gg" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/><stop offset="95%" stopColor="#10b981" stopOpacity={0}/></linearGradient>
+              </defs>
+              <XAxis dataKey="date" tick={{fill:"#64748b",fontSize:10}} axisLine={false} tickLine={false} tickFormatter={d=>d.slice(5)}/>
+              <YAxis tick={{fill:"#64748b",fontSize:10}} axisLine={false} tickLine={false}/>
+              <Tooltip contentStyle={TT}/>
+              <Area type="monotone" dataKey="clicks" stroke="#3b82f6" fill="url(#gc)" strokeWidth={2} dot={false} name="Clicks"/>
+              <Area type="monotone" dataKey="conversions" stroke="#10b981" fill="url(#gg)" strokeWidth={2} dot={false} name="Conversions"/>
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
-      </div>}
+
+        {/* Table */}
+        {rows.length === 0 ? (
+          <div className="rounded-2xl border p-12 text-center" style={card}><div className="text-5xl mb-4 opacity-30">📅</div><p className="text-slate-400 font-bold">No data in this period</p></div>
+        ) : (
+          <div className="rounded-2xl border overflow-hidden" style={card}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead><tr className="border-b border-white/5" style={{background:"rgba(255,255,255,0.03)"}}>
+                  {["Date","Clicks","Unique Clicks","Conversions","CR%",role!=="affiliate"&&"Revenue"].filter(Boolean).map(h=>(
+                    <th key={h} className="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                  ))}
+                </tr></thead>
+                <tbody>
+                  {/* Totals row */}
+                  <tr className="border-b border-orange-500/20 bg-orange-500/5">
+                    <td className="py-3 px-4 text-orange-400 font-black">TOTAL</td>
+                    <td className="py-3 px-4 font-black text-white">{totals.clicks||0}</td>
+                    <td className="py-3 px-4 font-black text-white">{totals.uniqueClicks||0}</td>
+                    <td className="py-3 px-4 font-black text-white">{totals.conversions||0}</td>
+                    <td className="py-3 px-4 font-black text-purple-400">{totals.cr||"0"}%</td>
+                    {role!=="affiliate"&&<td className="py-3 px-4 font-black text-orange-400">{fmt(totals.revenue||0)}</td>}
+                  </tr>
+                  {rows.map((row, i) => {
+                    const prev = rows[i + 1];
+                    const clickDiff = prev ? row.clicks - prev.clicks : 0;
+                    return (
+                      <tr key={row.date} className="border-b border-white/5 hover:bg-white/[0.02]">
+                        <td className="py-3 px-4">
+                          <p className="text-white font-semibold">{new Date(row.date).toLocaleDateString("en-IN",{weekday:"short",day:"2-digit",month:"short"})}</p>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-1">
+                            <span className="text-white font-semibold">{row.clicks}</span>
+                            {clickDiff !== 0 && <span className={`text-xs ${clickDiff > 0 ? "text-green-400" : "text-red-400"}`}>{clickDiff > 0 ? <TrendingUp size={10}/> : <TrendingDown size={10}/>}</span>}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-slate-300">{row.uniqueClicks}</td>
+                        <td className="py-3 px-4 text-green-400 font-semibold">{row.conversions}</td>
+                        <td className="py-3 px-4"><span className={`font-bold ${+row.cr>5?"text-green-400":+row.cr>2?"text-amber-400":"text-slate-400"}`}>{row.cr}%</span></td>
+                        {role!=="affiliate"&&<td className="py-3 px-4 text-orange-400 font-semibold">{row.revenue>0?fmt(row.revenue):"—"}</td>}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </>}
     </div>
   );
 }

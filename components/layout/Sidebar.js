@@ -23,6 +23,8 @@ const ADMIN_NAV = [
     { label:"Coupon Codes", href:"/campaigns/coupons" },
     { label:"Featured Campaigns", href:"/campaigns/featured" },
     { label:"Bulk Targeting", href:"/campaigns/targeting" },
+    { label:"Campaign Settings", href:"/campaigns/settings" },
+    { label:"Referrer Settings", href:"/campaigns/referrer" },
   ]},
   { label:"Publishers", icon:Users, children:[
     { label:"Manage", href:"/publishers/manage" },
@@ -40,6 +42,8 @@ const ADMIN_NAV = [
     { label:"Click Report", href:"/reports/clicks" },
     { label:"Conversion Report", href:"/reports/conversions" },
     { label:"Postback Sent Logs", href:"/reports/postback-logs" },
+    { label:"Referrer / Domain", href:"/reports/referrers" },
+    { label:"Daily Report", href:"/reports/daily" },
     { label:"Scheduled Reports", href:"/reports/scheduled" },
   ]},
   { label:"Invoices", icon:FileText, children:[
