@@ -14,7 +14,7 @@ export default function ConversionReport(){
   return(
     <div className="space-y-5">
       <PageHeader title="Conversion Report" subtitle="All tracked conversions and payouts"
-        action={<div className="flex gap-2"><DateRangePicker from={dr.from} to={dr.to} onChange={r=>{setDr(r);setPage(1);}}/><button className="btn-ghost px-3 py-2 text-xs flex items-center gap-1"><Download size={12}/>Export</button></div>}/>
+        action={<div className="flex gap-2"><DateRangePicker from={dr.from} to={dr.to} onChange={r=>{setDr(r);setPage(1);}}/><button onClick={()=>window.open(`/api/reports/export?type=conversions&from=${dr.from}&to=${dr.to}`,"_blank")} className="btn-ghost px-3 py-2 text-xs flex items-center gap-1"><Download size={12}/>Export CSV</button></div>}/>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[["Total",data?.total||0,"#10b981"],["Payout",fmt(t.totalPayout||0),"#f97316"],["Sale",fmt(t.totalSale||0),"#3b82f6"],["Avg",t.count?fmt((t.totalPayout||0)/t.count):"₹0","#a855f7"]].map(([l,v,c])=>(
           <div key={l} className="rounded-2xl border p-4" style={card}><p className="text-xs text-slate-500 uppercase font-bold mb-2">{l}</p><p className="text-2xl font-black" style={{color:c}}>{v}</p></div>

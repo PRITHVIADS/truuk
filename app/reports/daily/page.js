@@ -34,7 +34,7 @@ export default function DailyReport() {
       <PageHeader title="Daily Report" subtitle="Day by day performance breakdown"
         action={<div className="flex gap-2">
           <DateRangePicker from={dr.from} to={dr.to} onChange={setDr}/>
-          <button className="btn-ghost px-3 py-2 text-xs flex items-center gap-1"><Download size={12}/>Export</button>
+          <button onClick={()=>window.open(`/api/reports/export?type=daily&from=${dr.from}&to=${dr.to}`,"_blank")} className="btn-ghost px-3 py-2 text-xs flex items-center gap-1"><Download size={12}/>Export CSV</button>
         </div>}/>
 
       {/* Totals */}

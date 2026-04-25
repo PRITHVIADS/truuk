@@ -26,7 +26,7 @@ export default function ClickReport(){
       <PageHeader title="Click Report" subtitle="All click events tracked through your campaigns"
         action={<div className="flex gap-2 items-center">
           <DateRangePicker from={dr.from} to={dr.to} onChange={r=>{setDr(r);setPage(1);}}/>
-          <button className="btn-ghost px-3 py-2 text-xs flex items-center gap-1"><Download size={12}/>Export</button>
+          <button onClick={()=>window.open(`/api/reports/export?type=clicks&from=${dr.from}&to=${dr.to}`,"_blank")} className="btn-ghost px-3 py-2 text-xs flex items-center gap-1"><Download size={12}/>Export CSV</button>
         </div>}/>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[["Total",data?.total||0,"#3b82f6"],["Valid",clicks.filter(c=>!c.isBot&&!c.isDuplicate).length,"#10b981"],["Bots",clicks.filter(c=>c.isBot).length,"#f59e0b"],["Dups",clicks.filter(c=>c.isDuplicate).length,"#64748b"]].map(([l,v,c])=>(
