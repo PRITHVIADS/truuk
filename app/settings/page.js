@@ -1,114 +1,70 @@
 "use client";
-import { useEffect, useState } from "react";
-import { PageHeader, Spinner } from "@/components/ui";
-import { generateTrackingLink, generatePostbackUrl } from "@/lib/utils";
-
-export default function SettingsPage() {
-  const [user,setUser]=useState(null);
-  const [form,setForm]=useState({name:"",company:"",phone:"",settings:{currency:"INR",timezone:"Asia/Kolkata",notifications:true}});
-  const [pwForm,setPwForm]=useState({current:"",newPw:"",confirm:""});
-  const [loading,setLoading]=useState(true);
-  const [saving,setSaving]=useState(false);
-  const [msg,setMsg]=useState("");
-  const [error,setError]=useState("");
-
-  useEffect(()=>{
-    fetch("/api/settings").then(r=>r.json()).then(d=>{
-      if(d.user){setUser(d.user);setForm({name:d.user.name||"",company:d.user.company||"",phone:d.user.phone||"",settings:{...d.user.settings}});}
-      setLoading(false);
-    });
-  },[]);
-
-  const f=(k,v)=>setForm(p=>({...p,[k]:v}));
-  const fs=(k,v)=>setForm(p=>({...p,settings:{...p.settings,[k]:v}}));
-
-  const handleSave=async()=>{
-    setSaving(true);setMsg("");setError("");
-    const r=await fetch("/api/settings",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)});
-    const d=await r.json();
-    if(r.ok){setMsg("Settings saved successfully!");}else{setError(d.error||"Failed to save");}
-    setSaving(false);
-    setTimeout(()=>setMsg(""),3000);
-  };
-
-  if(loading) return <div className="flex justify-center py-20"><Spinner size={8}/></div>;
-
-  const trackingBase=process.env.NEXT_PUBLIC_TRACKING_DOMAIN||"https://trk.yourdomain.io";
-
-  return (
+import{useEffect,useState}from"react";import{useSession}from"next-auth/react";import{PageHeader,Spinner}from"@/components/ui";import{Save,Eye,EyeOff,User,Lock,CreditCard,Globe,Key}from"lucide-react";
+export default function Settings(){
+  const{data:session}=useSession();const role=session?.user?.role;
+  const[data,setData]=useState(null);const[loading,setLoading]=useState(true);const[tab,setTab]=useState("profile");
+  const[saving,setSaving]=useState(false);const[saved,setSaved]=useState("");const[error,setError]=useState("");
+  const[showPass,setShowPass]=useState(false);const[showNewPass,setShowNewPass]=useState(false);
+  const[name,setName]=useState("");const[company,setCompany]=useState("");const[phone,setPhone]=useState("");const[website,setWebsite]=useState("");const[postbackUrl,setPostbackUrl]=useState("");const[paymentMethod,setPaymentMethod]=useState("Bank Transfer");
+  const[currentPassword,setCurrentPassword]=useState("");const[newPassword,setNewPassword]=useState("");const[confirmPassword,setConfirmPassword]=useState("");
+  const load=async()=>{setLoading(true);const r=await fetch("/api/settings");const d=await r.json();setData(d);const u=d.user||{};setName(u.name||"");setCompany(u.company||"");setPhone(u.phone||"");setWebsite(u.website||"");setPostbackUrl(u.postbackUrl||"");setPaymentMethod(u.paymentMethod||"Bank Transfer");setLoading(false);};
+  useEffect(()=>{load();},[]);
+  const saveProfile=async()=>{setSaving(true);setError("");setSaved("");const r=await fetch("/api/settings",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,company,phone,website,postbackUrl,paymentMethod})});const d=await r.json();if(!r.ok){setError(d.error||"Error");setSaving(false);return;}setSaved("profile");setSaving(false);setTimeout(()=>setSaved(""),3000);};
+  const savePassword=async()=>{if(newPassword!==confirmPassword){setError("Passwords don't match");return;}if(newPassword.length<8){setError("Min 8 characters");return;}setSaving(true);setError("");const r=await fetch("/api/settings",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({currentPassword,newPassword})});const d=await r.json();if(!r.ok){setError(d.error||"Error");setSaving(false);return;}setSaved("password");setSaving(false);setCurrentPassword("");setNewPassword("");setConfirmPassword("");setTimeout(()=>setSaved(""),3000);};
+  const card={background:"rgba(255,255,255,0.025)",borderColor:"rgba(255,255,255,0.07)"};
+  const u=data?.user||{};
+  const TABS=[{id:"profile",label:"Profile",icon:User},{id:"password",label:"Password",icon:Lock},role==="affiliate"&&{id:"payment",label:"Payment",icon:CreditCard},role==="affiliate"&&{id:"postback",label:"Postback",icon:Globe}].filter(Boolean);
+  if(loading)return<div className="flex justify-center py-20"><Spinner/></div>;
+  return(
     <div className="space-y-6 max-w-3xl">
-      <PageHeader title="Settings" subtitle="Platform and account configuration"/>
-
-      {/* Profile */}
-      <div className="card p-6">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-purple-600 flex items-center justify-center text-white font-black text-xl">
-            {form.name?.[0]||"A"}
-          </div>
-          <div><p className="text-white font-black text-lg">{form.name||"Admin"}</p>
-            <p className="text-slate-500 text-sm">{user?.email}</p>
-            <span className="text-xs bg-orange-500/15 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full font-semibold capitalize">{user?.role}</span>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div><label className="text-xs text-slate-400 font-semibold block mb-1.5">Full Name</label>
-            <input value={form.name} onChange={e=>f("name",e.target.value)} className="input"/></div>
-          <div><label className="text-xs text-slate-400 font-semibold block mb-1.5">Company</label>
-            <input value={form.company} onChange={e=>f("company",e.target.value)} className="input" placeholder="Your company name"/></div>
-          <div><label className="text-xs text-slate-400 font-semibold block mb-1.5">Phone</label>
-            <input value={form.phone} onChange={e=>f("phone",e.target.value)} className="input" placeholder="+91 …"/></div>
-          <div><label className="text-xs text-slate-400 font-semibold block mb-1.5">Currency</label>
-            <select value={form.settings?.currency} onChange={e=>fs("currency",e.target.value)} className="select">
-              {["INR","USD","EUR","GBP","AED"].map(c=><option key={c}>{c}</option>)}
-            </select></div>
-          <div><label className="text-xs text-slate-400 font-semibold block mb-1.5">Timezone</label>
-            <select value={form.settings?.timezone} onChange={e=>fs("timezone",e.target.value)} className="select">
-              {["Asia/Kolkata","Asia/Dubai","America/New_York","Europe/London","UTC"].map(t=><option key={t}>{t}</option>)}
-            </select></div>
-          <div className="flex items-center gap-3 pt-4">
-            <label className="text-sm text-slate-300 font-semibold">Email Notifications</label>
-            <button onClick={()=>fs("notifications",!form.settings?.notifications)}
-              className={`w-11 h-6 rounded-full transition-all relative ${form.settings?.notifications?"bg-orange-500":"bg-white/10"}`}>
-              <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${form.settings?.notifications?"left-6":"left-1"}`}/>
-            </button>
-          </div>
-        </div>
-        {msg&&<p className="text-green-400 text-sm mt-3">✓ {msg}</p>}
-        {error&&<p className="text-red-400 text-sm mt-3">{error}</p>}
-        <button onClick={handleSave} disabled={saving} className="btn-primary px-5 py-2.5 text-sm mt-5 disabled:opacity-50">{saving?"Saving…":"Save Changes"}</button>
-      </div>
-
-      {/* Tracking Info */}
-      <div className="card p-6">
-        <p className="text-white font-black text-base mb-1">Tracking & Integration</p>
-        <p className="text-slate-500 text-sm mb-5">Use these URLs in your campaigns and advertiser postbacks</p>
-        <div className="space-y-4">
-          {[
-            ["Click Tracking URL",`${trackingBase}/c?cid={{CAMPAIGN_ID}}&aid={{AFF_ID}}&sub1={{SUB1}}`,"Share this with affiliates as their tracking link"],
-            ["Postback / S2S URL",`${process.env.NEXTAUTH_URL||"http://localhost:3000"}/api/conversions?cid={{CAMPAIGN_ID}}&aid={{AFF_ID}}&txid={{TRANSACTION_ID}}`,"Give this to advertisers to fire on conversion"],
-            ["Pixel URL",`${process.env.NEXTAUTH_URL||"http://localhost:3000"}/api/conversions?cid={{CAMPAIGN_ID}}&aid={{AFF_ID}}&txid={{TRANSACTION_ID}}`,"For browser-based pixel tracking"],
-          ].map(([label,url,desc])=>(
-            <div key={label}>
-              <p className="text-sm text-slate-300 font-semibold mb-0.5">{label}</p>
-              <p className="text-xs text-slate-500 mb-1.5">{desc}</p>
-              <div className="flex items-center gap-2 bg-black/30 border border-white/5 rounded-xl px-3 py-2">
-                <code className="text-xs text-orange-400 font-mono flex-1 break-all">{url}</code>
-                <button onClick={()=>navigator.clipboard.writeText(url)} className="text-xs btn-ghost px-2 py-1 flex-shrink-0">Copy</button>
-              </div>
+      <PageHeader title="Settings" subtitle="Manage your account settings"/>
+      <div className="rounded-2xl border p-5" style={card}>
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-pink-600 flex items-center justify-center text-white text-2xl font-black">{u.name?.[0]||"?"}</div>
+          <div><p className="text-white font-black text-lg">{u.name}</p><p className="text-slate-400 text-sm">{u.email}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs bg-orange-500/15 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full capitalize">{role}</span>
+              {(u.shortId||u.publisherId)&&<code className="text-xs text-slate-500 font-mono">{u.shortId||u.publisherId||u.referralCode}</code>}
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${u.status==="Active"?"bg-green-500/15 text-green-400 border border-green-500/30":"bg-amber-500/15 text-amber-400 border border-amber-500/30"}`}>{u.status}</span>
             </div>
-          ))}
+          </div>
         </div>
       </div>
-
-      {/* Platform Info */}
-      <div className="card p-6">
-        <p className="text-white font-black text-base mb-4">Platform Information</p>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          {[["Platform","Truuk v1.0"],["Stack","Next.js 14 + MongoDB"],["Auth","NextAuth JWT"],["Environment",process.env.NODE_ENV||"development"]].map(([k,v])=>(
-            <div key={k}><p className="text-xs text-slate-500">{k}</p><p className="text-white font-semibold">{v}</p></div>
-          ))}
-        </div>
+      <div className="flex gap-2 flex-wrap">
+        {TABS.map(t=><button key={t.id} onClick={()=>{setTab(t.id);setError("");setSaved("");}} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab===t.id?"bg-orange-500 text-white":"bg-white/5 text-slate-400 hover:text-white"}`}><t.icon size={14}/>{t.label}</button>)}
+        <a href="/api-keys" className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-white/5 text-slate-400 hover:text-white"><Key size={14}/>API Keys</a>
       </div>
+      {error&&<div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>}
+      {saved&&<div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 text-sm">✓ {saved==="profile"?"Profile updated!":"Password changed!"}</div>}
+      {tab==="profile"&&<div className="rounded-2xl border p-6 space-y-4" style={card}>
+        <p className="text-white font-black">Profile Information</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div><label className="text-sm text-slate-300 font-semibold block mb-1.5">Full Name</label><input value={name} onChange={e=>setName(e.target.value)} className="input w-full"/></div>
+          <div><label className="text-sm text-slate-300 font-semibold block mb-1.5">Company</label><input value={company} onChange={e=>setCompany(e.target.value)} className="input w-full" placeholder="Optional"/></div>
+          <div><label className="text-sm text-slate-300 font-semibold block mb-1.5">Phone</label><input value={phone} onChange={e=>setPhone(e.target.value)} className="input w-full"/></div>
+          <div><label className="text-sm text-slate-300 font-semibold block mb-1.5">Website</label><input value={website} onChange={e=>setWebsite(e.target.value)} className="input w-full" placeholder="https://"/></div>
+        </div>
+        <div className="pt-2 border-t border-white/5"><label className="text-sm text-slate-400 block mb-1">Email</label><p className="text-slate-300 text-sm">{u.email} <span className="text-slate-600 text-xs ml-2">(cannot be changed)</span></p></div>
+        <button onClick={saveProfile} disabled={saving} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold ${saved==="profile"?"bg-green-500 text-white":"btn-primary"} disabled:opacity-50`}><Save size={14}/>{saving?"Saving…":saved==="profile"?"✓ Saved!":"Save Profile"}</button>
+      </div>}
+      {tab==="password"&&<div className="rounded-2xl border p-6 space-y-4" style={card}>
+        <p className="text-white font-black">Change Password</p>
+        <div><label className="text-sm text-slate-300 font-semibold block mb-1.5">Current Password</label><div className="relative"><input type={showPass?"text":"password"} value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} className="input w-full pr-10" placeholder="Current password"/><button type="button" onClick={()=>setShowPass(p=>!p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">{showPass?<EyeOff size={14}/>:<Eye size={14}/>}</button></div></div>
+        <div><label className="text-sm text-slate-300 font-semibold block mb-1.5">New Password</label><div className="relative"><input type={showNewPass?"text":"password"} value={newPassword} onChange={e=>setNewPassword(e.target.value)} className="input w-full pr-10" placeholder="Min. 8 characters"/><button type="button" onClick={()=>setShowNewPass(p=>!p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">{showNewPass?<EyeOff size={14}/>:<Eye size={14}/>}</button></div>{newPassword&&<div className="flex gap-1 mt-1.5 items-center">{[1,2,3,4].map(i=><div key={i} className={`h-1 flex-1 rounded-full ${newPassword.length>=i*3?(i<=1?"bg-red-500":i<=2?"bg-amber-500":i<=3?"bg-yellow-500":"bg-green-500"):"bg-white/10"}`}/>)<span className="text-xs text-slate-500 ml-1">{newPassword.length<4?"Weak":newPassword.length<8?"Fair":newPassword.length<12?"Good":"Strong"}</span></div>}</div>
+        <div><label className="text-sm text-slate-300 font-semibold block mb-1.5">Confirm Password</label><input type="password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} className={`input w-full ${confirmPassword&&newPassword!==confirmPassword?"border-red-500/50":""}`} placeholder="Repeat new password"/>{confirmPassword&&newPassword!==confirmPassword&&<p className="text-red-400 text-xs mt-1">Passwords don't match</p>}</div>
+        <button onClick={savePassword} disabled={saving||!currentPassword||!newPassword||newPassword!==confirmPassword} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold ${saved==="password"?"bg-green-500 text-white":"btn-primary"} disabled:opacity-50`}><Lock size={14}/>{saving?"Saving…":saved==="password"?"✓ Changed!":"Change Password"}</button>
+      </div>}
+      {tab==="payment"&&role==="affiliate"&&<div className="rounded-2xl border p-6 space-y-4" style={card}>
+        <p className="text-white font-black">Payment Preferences</p>
+        <div className="grid grid-cols-2 gap-2">{[["Bank Transfer","🏦"],["UPI","📱"],["PayPal","💳"],["Crypto","🪙"]].map(([m,icon])=><button key={m} onClick={()=>setPaymentMethod(m)} type="button" className={`py-3 rounded-xl border text-sm font-semibold transition-all ${paymentMethod===m?"border-orange-500 bg-orange-500/15 text-orange-400":"border-white/10 bg-white/5 text-slate-400"}`}>{icon} {m}</button>)}</div>
+        <button onClick={saveProfile} disabled={saving} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold ${saved==="profile"?"bg-green-500 text-white":"btn-primary"} disabled:opacity-50`}><Save size={14}/>{saving?"Saving…":"Save Payment"}</button>
+      </div>}
+      {tab==="postback"&&role==="affiliate"&&<div className="rounded-2xl border p-6 space-y-4" style={card}>
+        <p className="text-white font-black">Server Postback URL</p>
+        <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/20"><p className="text-xs text-blue-400 font-semibold mb-1">📬 How it works</p><p className="text-xs text-slate-400">Truuk fires this URL on every conversion. Use macros: <code className="text-orange-400">{"{txn_id}"}</code> <code className="text-orange-400">{"{payout}"}</code> <code className="text-orange-400">{"{click_id}"}</code></p></div>
+        <div><label className="text-sm text-slate-300 font-semibold block mb-1.5">Postback URL</label><input value={postbackUrl} onChange={e=>setPostbackUrl(e.target.value)} className="input w-full" placeholder="https://tracker.platform.com/postback?txid={txn_id}&payout={payout}"/></div>
+        <button onClick={saveProfile} disabled={saving} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold ${saved==="profile"?"bg-green-500 text-white":"btn-primary"} disabled:opacity-50`}><Save size={14}/>{saving?"Saving…":"Save Postback"}</button>
+      </div>}
     </div>
   );
 }
