@@ -17,3 +17,4 @@ export default function RegisterSuccess(){
     </div>
   );
 }
+// v2
