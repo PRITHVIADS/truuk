@@ -45,6 +45,7 @@ const ClickSchema = new mongoose.Schema({
   isDuplicate: { type: Boolean, default: false },
   converted: { type: Boolean, default: false },
   conversionId: { type: mongoose.Schema.Types.ObjectId, ref: "Conversion" },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", index: true },
 }, { timestamps: true });
 
 ClickSchema.index({ campaignId: 1, createdAt: -1 });

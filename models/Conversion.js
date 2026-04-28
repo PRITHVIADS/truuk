@@ -18,6 +18,7 @@ const ConversionSchema = new mongoose.Schema({
   approvedAt: { type: Date },
   rejectedAt: { type: Date },
   rejectionReason: { type: String },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", index: true },
 }, { timestamps: true });
 
 export default mongoose.models.Conversion || mongoose.model("Conversion", ConversionSchema);

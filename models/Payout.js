@@ -11,6 +11,7 @@ const PayoutSchema = new mongoose.Schema({
   processedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   processedAt: { type: Date },
   conversions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Conversion" }],
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", index: true },
 }, { timestamps: true });
 
 export default mongoose.models.Payout || mongoose.model("Payout", PayoutSchema);
