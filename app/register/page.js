@@ -9,6 +9,14 @@ export default function RegisterPage(){
   const[plan,setPlan]=useState("trial");
   const[form,setForm]=useState({orgName:"",name:"",email:"",password:"",phone:"",website:""});
   const f=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const validateEmail=(email)=>{
+    const re=/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+    if(!re.test(email))return"Please enter a valid email address";
+    const blocked=["test.com","example.com","tempmail.com","mailinator.com","guerrillamail.com","throwaway.email","yopmail.com","sharklasers.com","guerrillamailblock.com","spam4.me","trashmail.com","fakeinbox.com"];
+    const domain=email.split("@")[1]?.toLowerCase();
+    if(blocked.includes(domain))return"Please use a valid business or personal email";
+    return null;
+  };
   const handleSubmit=async()=>{
     if(!form.orgName){setError("Organization name required");return;}
     if(!form.name){setError("Your name required");return;}
@@ -62,7 +70,11 @@ export default function RegisterPage(){
             <div><label className="text-sm text-slate-300 font-semibold block mb-1.5">Phone <span className="text-xs text-slate-500">(Optional)</span></label><input value={form.phone} onChange={e=>f("phone",e.target.value)} className="input w-full" placeholder="+91 98765 43210"/></div>
             <div><label className="text-sm text-slate-300 font-semibold block mb-1.5">Website <span className="text-xs text-slate-500">(Optional)</span></label><input value={form.website} onChange={e=>f("website",e.target.value)} className="input w-full" placeholder="https://yournetwork.com"/></div>
             {error&&<div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>}
-            <button onClick={()=>{if(!form.orgName||!form.name||!form.email||!form.password){setError("Please fill all required fields");return;}if(form.password.length<8){setError("Password min 8 characters");return;}setError("");setStep(2);}} className="btn-primary w-full py-3 text-sm font-bold">Next: Choose Plan →</button>
+            <button onClick={()=>{if(!form.orgName||!form.name||!form.email||!form.password){setError("Please fill all required fields");return;}
+              const emailErr=validateEmail(form.email);
+              if(emailErr){setError(emailErr);return;}
+              if(form.password.length<8){setError("Password min 8 characters");return;}
+              setError("");setStep(2);}} className="btn-primary w-full py-3 text-sm font-bold">Next: Choose Plan →</button>
           </>}
 
           {step===2&&<>
