@@ -29,24 +29,31 @@ export const authOptions = {
           role: user.role,
           company: user.company,
           status: user.status,
+          isSuperAdmin: user.isSuperAdmin || false,
+          organizationId: user.organizationId ? user.organizationId.toString() : null,
         };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) { token.id = user.id; token.role = user.role
-          token.isSuperAdmin = user.isSuperAdmin || false
-          token.organizationId = user.organizationId || null; token.company = user.company; token.status = user.status; }
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        token.company = user.company;
+        token.status = user.status;
+        token.isSuperAdmin = user.isSuperAdmin || false;
+        token.organizationId = user.organizationId || null;
+      }
       return token;
     },
     async session({ session, token }) {
       session.user.id = token.id;
-      session.user.role = token.role
-        session.user.isSuperAdmin = token.isSuperAdmin || false
-        session.user.organizationId = token.organizationId || null;
+      session.user.role = token.role;
       session.user.company = token.company;
       session.user.status = token.status;
+      session.user.isSuperAdmin = token.isSuperAdmin || false;
+      session.user.organizationId = token.organizationId || null;
       return session;
     },
   },
