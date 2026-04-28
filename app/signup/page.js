@@ -47,24 +47,31 @@ export default function SignupPage(){
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-12 h-12 rounded-2xl bg-orange-500 flex items-center justify-center mx-auto mb-4 text-xl font-black text-white">T</div>
-          <h1 className="text-2xl font-black text-white">Create your
-cat > app/signup/success/page.js << 'ENDOFFILE'
-"use client";
-import{useSearchParams}from"next/navigation";import{CheckCircle}from"lucide-react";
-export default function SignupSuccess(){
-  const params=useSearchParams();const role=params.get("role");const email=params.get("email");
-  return(
-    <div className="min-h-screen flex items-center justify-center p-4" style={{background:"#080c14"}}>
-      <div className="w-full max-w-md text-center">
-        <div className="w-16 h-16 rounded-full bg-green-500/15 flex items-center justify-center mx-auto mb-5"><CheckCircle size={32} className="text-green-400"/></div>
-        <h1 className="text-2xl font-black text-white mb-2">Account Created! 🎉</h1>
-        <p className="text-slate-400 mb-6">Your {role} account has been submitted. An admin will review and activate it shortly.</p>
-        <div className="rounded-2xl border p-5 mb-6 text-left space-y-3" style={{background:"rgba(255,255,255,0.025)",borderColor:"rgba(255,255,255,0.07)"}}>
-          <div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-green-500/15 flex items-center justify-center"><CheckCircle size={14} className="text-green-400"/></div><div><p className="text-white text-sm font-semibold">Account registered</p><p className="text-slate-500 text-xs">{email}</p></div></div>
-          <div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center"><span className="text-amber-400 text-xs font-bold">2</span></div><div><p className="text-white text-sm font-semibold">Pending admin review</p><p className="text-slate-500 text-xs">Usually within 24 hours</p></div></div>
-          <div className="flex items-center gap-3 opacity-40"><div className="w-8 h-8 rounded-full bg-blue-500/15 flex items-center justify-center"><span className="text-blue-400 text-xs font-bold">3</span></div><div><p className="text-white text-sm font-semibold">Account activated</p><p className="text-slate-500 text-xs">You can then login</p></div></div>
+          <h1 className="text-2xl font-black text-white">Create your account</h1>
+          <p className="text-slate-500 text-sm mt-1">{isAdv?"Advertiser — promote your business":"Publisher — earn from promotions"}</p>
+          <button onClick={()=>setRole(null)} className="text-xs text-slate-600 hover:text-slate-400 mt-1 underline">← Change account type</button>
         </div>
-        <a href="/login" className="btn-primary px-6 py-3 text-sm inline-block">Go to Login →</a>
+        <div className="rounded-2xl border p-6 space-y-4" style={{background:"rgba(255,255,255,0.025)",borderColor:"rgba(255,255,255,0.07)"}}>
+          <div className={`flex items-center gap-2 p-3 rounded-xl ${isAdv?"bg-blue-500/10 border border-blue-500/20":"bg-green-500/10 border border-green-500/20"}`}>
+            {isAdv?<Megaphone size={15} className="text-blue-400"/>:<Users size={15} className="text-green-400"/>}
+            <span className={`text-xs font-bold ${isAdv?"text-blue-400":"text-green-400"}`}>{isAdv?"Advertiser Account":"Publisher Account"}</span>
+            <span className="text-xs text-slate-500 ml-auto">Pending approval after signup</span>
+          </div>
+          <div><label className="text-sm text-slate-300 font-semibold block mb-1.5">Full Name <span className="text-red-400">*</span></label><input value={form.name} onChange={e=>f("name",e.target.value)} className="input w-full" placeholder="Your full name"/></div>
+          <div><label className="text-sm text-slate-300 font-semibold block mb-1.5">Email Address <span className="text-red-400">*</span></label><input type="email" value={form.email} onChange={e=>f("email",e.target.value)} className="input w-full" placeholder="you@example.com"/></div>
+          <div>
+            <label className="text-sm text-slate-300 font-semibold block mb-1.5">Password <span className="text-red-400">*</span></label>
+            <div className="relative"><input type={showPass?"text":"password"} value={form.password} onChange={e=>f("password",e.target.value)} className="input w-full pr-10" placeholder="Min. 8 characters"/><button type="button" onClick={()=>setShowPass(p=>!p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">{showPass?<EyeOff size={15}/>:<Eye size={15}/>}</button></div>
+            {form.password&&<div className="flex gap-1 mt-1.5 items-center">{[1,2,3,4].map(i=><div key={i} className={`h-1 flex-1 rounded-full ${form.password.length>=i*3?(i<=1?"bg-red-500":i<=2?"bg-amber-500":i<=3?"bg-yellow-500":"bg-green-500"):"bg-white/10"}`}/>)<span className="text-xs text-slate-500 ml-1">{form.password.length<4?"Weak":form.password.length<8?"Fair":form.password.length<12?"Good":"Strong"}</span></div>}
+          </div>
+          <div><label className="text-sm text-slate-300 font-semibold block mb-1.5">Company <span className="text-xs text-slate-500 font-normal">(Optional)</span></label><input value={form.company} onChange={e=>f("company",e.target.value)} className="input w-full" placeholder={isAdv?"Your company or brand":"Your website or media company"}/></div>
+          <div><label className="text-sm text-slate-300 font-semibold block mb-1.5">Phone <span className="text-xs text-slate-500 font-normal">(Optional)</span></label><input value={form.phone} onChange={e=>f("phone",e.target.value)} className="input w-full" placeholder="+91 98765 43210"/></div>
+          {!isAdv&&<div><label className="text-sm text-slate-300 font-semibold block mb-1.5">Preferred Payment</label><div className="grid grid-cols-2 gap-2">{["Bank Transfer","UPI","PayPal","Crypto"].map(m=><button key={m} onClick={()=>f("paymentMethod",m)} type="button" className={`py-2 rounded-xl border text-xs font-semibold transition-all ${form.paymentMethod===m?"border-orange-500 bg-orange-500/15 text-orange-400":"border-white/10 bg-white/5 text-slate-400"}`}>{m==="Bank Transfer"?"🏦":m==="UPI"?"📱":m==="PayPal"?"💳":"🪙"} {m}</button>)}</div></div>}
+          {error&&<div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>}
+          <button onClick={handleSubmit} disabled={saving} className="btn-primary w-full py-3 text-sm font-bold disabled:opacity-50">{saving?"Creating account…":"Create Account →"}</button>
+          <p className="text-xs text-slate-500 text-center">Your account will be reviewed before activation.</p>
+        </div>
+        <p className="text-center text-slate-500 text-sm mt-4">Already have an account? <a href="/login" className="text-orange-400 font-semibold">Sign in</a></p>
       </div>
     </div>
   );
