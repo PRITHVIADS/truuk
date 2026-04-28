@@ -51,7 +51,7 @@ export default function LoginPage() {
               {loading ? "Signing in…" : "Sign In"}
             </button>
           </form>
-<p style="text-align:center;margin-top:16px;font-size:13px;color:#475569;">New network? <a href="/register" style="color:#f97316;font-weight:600;">Create account →</a></p>
+<p style={{textAlign:"center",marginTop:"16px",fontSize:"13px",color:"#475569"}}>New network? <a href="/register" style={{color:"#f97316",fontWeight:"600"}}>Create account →</a></p>
 
           <p className="text-center text-xs text-slate-500 mt-5">
             New here? <Link href="/signup" className="text-orange-400 hover:text-orange-300 font-semibold">Create an account</Link>
