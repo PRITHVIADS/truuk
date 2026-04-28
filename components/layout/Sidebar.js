@@ -58,6 +58,7 @@ const ADMIN_NAV = [
     { label:"Smart Link", href:"/automation/smart-link" },
     { label:"API", href:"/automation/api" },
   ]},
+  { label:"Team Members", href:"/team", icon:Users },
   { label:"Settings", href:"/settings", icon:Settings },
 ];
 
@@ -75,6 +76,7 @@ const ADVERTISER_NAV = [
     { label:"Conversion Report", href:"/reports/conversions" },
   ]},
   { label:"Invoices", href:"/invoices/dashboard", icon:FileText },
+  { label:"Team Members", href:"/team", icon:Users },
   { label:"Settings", href:"/settings", icon:Settings },
 ];
 
@@ -87,6 +89,7 @@ const AFFILIATE_NAV = [
     { label:"Daily Report", href:"/reports/daily" },
   ]},
   { label:"Payouts", href:"/payouts", icon:Wallet },
+  { label:"Team Members", href:"/team", icon:Users },
   { label:"Settings", href:"/settings", icon:Settings },
 ];
 
