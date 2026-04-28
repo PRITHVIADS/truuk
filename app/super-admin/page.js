@@ -43,9 +43,7 @@ export default function SuperAdmin() {
   const [suspendReason, setSuspendReason] = useState("");
   const [planChange, setPlanChange] = useState("");
 
-  useEffect(() => {
-    if (session && !session.user?.isSuperAdmin) router.push("/dashboard");
-  }, [session]);
+
 
   const load = async () => {
     setLoading(true);
