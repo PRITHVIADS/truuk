@@ -10,7 +10,7 @@ import { emails } from "@/lib/email";
 export async function GET(req) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.isSuperAdmin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     await connectDB();
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
@@ -31,7 +31,7 @@ export async function GET(req) {
 export async function PATCH(req) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.isSuperAdmin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     await connectDB();
     const { id, status, plan, notes, suspendReason } = await req.json();
     const org = await Organization.findById(id);
