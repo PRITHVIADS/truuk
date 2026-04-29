@@ -1,0 +1,2 @@
+import{NextResponse}from"next/server";import{connectDB}from"@/lib/mongoose";import Organization from"@/models/Organization";
+export async function GET(req,{params}){try{await connectDB();const org=await Organization.findOne({slug:params.slug,status:"Active"}).select("name slug email website logo").lean();if(!org)return NextResponse.json({error:"Not found"},{status:404});return NextResponse.json({org});}catch(err){return NextResponse.json({error:err.message},{status:500});}}
