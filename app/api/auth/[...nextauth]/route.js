@@ -18,6 +18,10 @@ export const authOptions = {
         if (!user) return null;
         const isValid = await user.comparePassword(credentials.password);
         if (!isValid) return null;
+        // Normalize co_admin to have admin-like access
+        if (user.role === "co_admin") {
+          user.role = "co_admin"; // Keep role but treat as admin in UI
+        }
         if (user.status === "Pending") throw new Error("PENDING");
         if (user.status === "Rejected") throw new Error("REJECTED");
         if (user.status === "Inactive") throw new Error("INACTIVE");
