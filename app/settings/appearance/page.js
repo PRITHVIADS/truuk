@@ -10,7 +10,8 @@ export default function AppearancePage(){
   const[prefs,setPrefs]=useState(DEFAULTS);const[saved,setSaved]=useState(false);
   const p=(k,v)=>setPrefs(prev=>({...prev,[k]:v}));
   useEffect(()=>{try{const s=localStorage.getItem("truuk_prefs");if(s)setPrefs({...DEFAULTS,...JSON.parse(s)});}catch(e){}}, []);
-  const handleSave=()=>{localStorage.setItem("truuk_prefs",JSON.stringify(prefs));const accent=ACCENTS.find(a=>a.id===prefs.accent);if(accent)document.documentElement.style.setProperty("--accent",accent.color);setSaved(true);setTimeout(()=>setSaved(false),2500);};
+  const handleSave=()=>{localStorage.setItem("truuk_prefs",JSON.stringify(prefs));const accent=ACCENTS.find(a=>a.id===prefs.accent);if(accent)document.documentElement.style.setProperty("--accent",accent.color);window.dispatchEvent(new Event("truuk-prefs-changed"));
+    setSaved(true);setTimeout(()=>setSaved(false),2500);};
   const card={background:"rgba(255,255,255,0.025)",borderColor:"rgba(255,255,255,0.07)"};
   const S=({title,icon:Icon,children})=>(<div className="rounded-2xl border p-5 space-y-4" style={card}><div className="flex items-center gap-2"><Icon size={15} className="text-orange-400"/><p className="text-white font-black text-sm">{title}</p></div>{children}</div>);
   return(
