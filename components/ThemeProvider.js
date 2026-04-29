@@ -1,10 +1,6 @@
 "use client";
 import{useEffect}from"react";
 
-const ACCENT_COLORS={orange:"#f97316",blue:"#3b82f6",green:"#10b981",purple:"#a855f7",pink:"#ec4899",red:"#ef4444",yellow:"#f59e0b",cyan:"#06b6d4"};
-const THEME_BG={dark:"#06080f",midnight:"#000000",navy:"#0a0e1a",forest:"#0a0f0a",purple:"#0d0a1a",rose:"#140a0a"};
-const FONTS={default:"'DM Sans', sans-serif",inter:"'Inter', sans-serif",mono:"'JetBrains Mono', monospace",rounded:"'Nunito', sans-serif"};
-
 export default function ThemeProvider({children}){
   useEffect(()=>{
     const apply=()=>{
@@ -12,83 +8,86 @@ export default function ThemeProvider({children}){
         const stored=localStorage.getItem("truuk_prefs");
         if(!stored)return;
         const prefs=JSON.parse(stored);
-        const root=document.documentElement;
-        const body=document.body;
 
-        // 1. Accent color
-        if(prefs.accent&&ACCENT_COLORS[prefs.accent]){
-          root.style.setProperty("--accent",ACCENT_COLORS[prefs.accent]);
-          root.style.setProperty("--accent-color",ACCENT_COLORS[prefs.accent]);
+        const ACCENTS={orange:"249 115 22",blue:"59 130 246",green:"16 185 129",purple:"168 85 247",pink:"236 72 153",red:"239 68 68",yellow:"245 158 11",cyan:"6 182 212"};
+        const THEMES={dark:"6 8 15",midnight:"0 0 0",navy:"10 14 26",forest:"10 15 10",purple:"13 10 26",rose:"20 10 10"};
+        const RADII={sharp:"0px",slight:"6px",rounded:"14px",pill:"999px"};
+
+        let css="";
+
+        // Accent color overrides
+        if(prefs.accent&&ACCENTS[prefs.accent]){
+          const rgb=ACCENTS[prefs.accent];
+          css+=`
+            :root { --accent-rgb: ${rgb}; }
+            .btn-primary, [class*="bg-orange-500"]:not([class*="bg-opacity"]) { background-color: rgb(${rgb}) !important; }
+            .text-orange-400, .text-orange-500 { color: rgb(${rgb}) !important; }
+            .border-orange-500 { border-color: rgb(${rgb}) !important; }
+            .bg-orange-500\\/10, .bg-orange-500\\/15 { background-color: rgba(${rgb}, 0.1) !important; }
+            .border-orange-500\\/30 { border-color: rgba(${rgb}, 0.3) !important; }
+            a[href].text-orange-400 { color: rgb(${rgb}) !important; }
+          `;
         }
 
-        // 2. Theme background
-        if(prefs.theme&&THEME_BG[prefs.theme]){
-          body.style.background=THEME_BG[prefs.theme];
-          root.style.setProperty("--bg",THEME_BG[prefs.theme]);
+        // Background
+        if(prefs.theme&&THEMES[prefs.theme]){
+          const rgb=THEMES[prefs.theme];
+          css+=`body, .bg-\\[\\#080c14\\], .bg-\\[\\#06080f\\] { background-color: rgb(${rgb}) !important; }`;
         }
 
-        // 3. Font
-        if(prefs.font&&FONTS[prefs.font]){
-          body.style.fontFamily=FONTS[prefs.font];
+        // Border radius
+        if(prefs.borderRadius&&RADII[prefs.borderRadius]){
+          css+=`.rounded-2xl { border-radius: ${RADII[prefs.borderRadius]} !important; }
+                .rounded-xl { border-radius: calc(${RADII[prefs.borderRadius]} * 0.7) !important; }`;
         }
 
-        // 4. Border radius
-        const radii={sharp:"0px",slight:"6px",rounded:"14px",pill:"999px"};
-        if(prefs.borderRadius&&radii[prefs.borderRadius]){
-          root.style.setProperty("--radius",radii[prefs.borderRadius]);
-        }
-
-        // 5. Animations
-        if(prefs.showAnimations===false){
-          root.style.setProperty("--transition","none");
-          const style=document.getElementById("truuk-anim-style")||document.createElement("style");
-          style.id="truuk-anim-style";
-          style.innerHTML="*{transition:none!important;animation:none!important;}";
-          document.head.appendChild(style);
-        } else {
-          const s=document.getElementById("truuk-anim-style");
-          if(s)s.remove();
-        }
-
-        // 6. Compact tables
-        const tableStyle=document.getElementById("truuk-table-style")||document.createElement("style");
-        tableStyle.id="truuk-table-style";
+        // Compact tables
         if(prefs.compactTables){
-          tableStyle.innerHTML="td,th{padding-top:6px!important;padding-bottom:6px!important;}";
-          document.head.appendChild(tableStyle);
-        } else {
-          tableStyle.innerHTML="";
+          css+=`td, th { padding-top: 6px !important; padding-bottom: 6px !important; }`;
         }
 
-        // 7. Density
-        const densityStyle=document.getElementById("truuk-density-style")||document.createElement("style");
-        densityStyle.id="truuk-density-style";
-        if(prefs.density==="compact"){
-          densityStyle.innerHTML="section,main>.space-y-6{gap:12px!important;}.p-6{padding:16px!important;}.p-5{padding:14px!important;}.rounded-2xl{border-radius:10px!important;}";
-        } else if(prefs.density==="comfortable"){
-          densityStyle.innerHTML="section,main>.space-y-6{gap:32px!important;}.p-6{padding:28px!important;}.p-5{padding:24px!important;}";
-        } else {
-          densityStyle.innerHTML="";
+        // No animations
+        if(prefs.showAnimations===false){
+          css+=`*, *::before, *::after { transition: none !important; animation: none !important; }`;
         }
-        document.head.appendChild(densityStyle);
 
-        // 8. Colorful badges — if off, make all badges gray
-        const badgeStyle=document.getElementById("truuk-badge-style")||document.createElement("style");
-        badgeStyle.id="truuk-badge-style";
+        // No colorful badges
         if(prefs.colorfulBadges===false){
-          badgeStyle.innerHTML=".text-green-400,.text-blue-400,.text-orange-400,.text-purple-400,.text-amber-400,.text-red-400{color:#94a3b8!important;}.bg-green-500\\/15,.bg-blue-500\\/15,.bg-orange-500\\/15,.bg-purple-500\\/15,.bg-amber-500\\/15,.bg-red-500\\/15{background:rgba(255,255,255,0.05)!important;}.border-green-500\\/30,.border-blue-500\\/30,.border-orange-500\\/30,.border-purple-500\\/30,.border-amber-500\\/30,.border-red-500\\/30{border-color:rgba(255,255,255,0.1)!important;}";
-        } else {
-          badgeStyle.innerHTML="";
+          css+=`
+            .text-green-400 { color: #94a3b8 !important; }
+            .text-blue-400 { color: #94a3b8 !important; }
+            .text-amber-400 { color: #94a3b8 !important; }
+            .text-red-400 { color: #94a3b8 !important; }
+            .text-purple-400 { color: #94a3b8 !important; }
+            .bg-green-500\\/15, .bg-blue-500\\/15, .bg-amber-500\\/15, .bg-red-500\\/15, .bg-purple-500\\/15 { background: rgba(255,255,255,0.05) !important; }
+            .border-green-500\\/30, .border-blue-500\\/30, .border-amber-500\\/30, .border-red-500\\/30, .border-purple-500\\/30 { border-color: rgba(255,255,255,0.1) !important; }
+          `;
         }
-        document.head.appendChild(badgeStyle);
 
-      }catch(e){console.error("Theme error:",e);}
+        // Density
+        if(prefs.density==="compact"){
+          css+=`.p-6{padding:14px!important;}.p-5{padding:12px!important;}.space-y-6>*+*{margin-top:12px!important;}`;
+        } else if(prefs.density==="comfortable"){
+          css+=`.p-6{padding:32px!important;}.p-5{padding:28px!important;}.space-y-6>*+*{margin-top:32px!important;}`;
+        }
+
+        // Font
+        const FONTS={default:"'DM Sans',sans-serif",inter:"'Inter',sans-serif",mono:"'JetBrains Mono',monospace",rounded:"'Nunito',sans-serif"};
+        if(prefs.font&&FONTS[prefs.font]){
+          css+=`body, p, span, div, button, input, textarea, select { font-family: ${FONTS[prefs.font]} !important; }`;
+        }
+
+        // Inject style
+        let style=document.getElementById("truuk-theme");
+        if(!style){style=document.createElement("style");style.id="truuk-theme";document.head.appendChild(style);}
+        style.innerHTML=css;
+
+      }catch(e){console.error("Theme:",e);}
     };
 
     apply();
-    window.addEventListener("storage",apply);
     window.addEventListener("truuk-prefs-changed",apply);
-    return()=>{window.removeEventListener("storage",apply);window.removeEventListener("truuk-prefs-changed",apply);};
+    return()=>window.removeEventListener("truuk-prefs-changed",apply);
   },[]);
 
   return children;
