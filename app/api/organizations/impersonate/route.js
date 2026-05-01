@@ -1,4 +1,11 @@
-import{NextResponse}from"next/server";import{getServerSession}from"next-auth";import{authOptions}from"@/app/api/auth/[...nextauth]/route";import{connectDB}from"@/lib/mongoose";import User from"@/models/User";import Organization from"@/models/Organization";import{encode}from"next-auth/jwt";
+import{NextResponse}from"next/server";
+import{getServerSession}from"next-auth";
+import{authOptions}from"@/app/api/auth/[...nextauth]/route";
+import{connectDB}from"@/lib/mongoose";
+import User from"@/models/User";
+import Organization from"@/models/Organization";
+import{encode}from"next-auth/jwt";
+
 export async function POST(req){
   try{
     const session=await getServerSession(authOptions);
@@ -14,39 +21,10 @@ export async function POST(req){
       secret:process.env.NEXTAUTH_SECRET
     });
     const response=NextResponse.json({success:true});
-    // Set both cookie names to cover all environments
-    const cookieOpts={httpOnly:true,secure:true,sameSite:"lax",path:"/",maxAge:3600};
-    response.cookies.set("__Secure-next-auth.session-token",token,cookieOpts);
-    response.cookies.set("next-auth.session-token",token,{...cookieOpts,secure:false});
+    response.cookies.set("__Secure-next-auth.session-token",token,{httpOnly:true,secure:true,sameSite:"lax",path:"/",maxAge:3600});
+    response.cookies.set("next-auth.session-token",token,{httpOnly:true,secure:false,sameSite:"lax",path:"/",maxAge:3600});
     return response;
-  }catch(err){return NextResponse.json({error:err.message},{status:500});}
+  }catch(err){
+    return NextResponse.json({error:err.message},{status:500});
+  }
 }
-EOF~
-python3 << 'EOF'
-with open('app/super-admin/page.js','r') as f:
-    c = f.read()
-
-old = '''  const loginAs=async(org)=>{
-    if(!confirm(`Enter ${org.name} dashboard as super admin?`))return;
-    setImpersonating(p=>({...p,[org._id]:true}));
-    const r=await fetch("/api/organizations/impersonate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({organizationId:org._id})});
-    const d=await r.json();
-    if(!r.ok){alert(d.error||"Error");setImpersonating(p=>({...p,[org._id]:false}));return;}
-    // Redirect to their dashboard directly - no password needed
-    window.location.href="/dashboard";
-  };'''
-
-new = '''  const loginAs=async(org)=>{
-    if(!confirm(`Enter ${org.name} dashboard as super admin?`))return;
-    setImpersonating(p=>({...p,[org._id]:true}));
-    const r=await fetch("/api/organizations/impersonate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({organizationId:org._id})});
-    const d=await r.json();
-    if(!r.ok){alert(d.error||"Error");setImpersonating(p=>({...p,[org._id]:false}));return;}
-    // Force full page reload to pick up new session cookie
-    window.location.replace("/dashboard");
-  };'''
-
-c = c.replace(old, new)
-with open('app/super-admin/page.js','w') as f:
-    f.write(c)
-print("Done!")
