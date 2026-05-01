@@ -3,6 +3,14 @@ import { useEffect, useState } from "react";
 import { Plus, Search, Pencil, Trash2, Copy, CheckCircle, XCircle, Info } from "lucide-react";
 import { Badge, PageHeader, FilterTabs, EmptyState, Spinner, Modal } from "@/components/ui";
 const EMPTY={name:"",email:"",password:"",company:"",phone:"",status:"Pending",paymentMethod:"Bank Transfer",postbackUrl:"",publisherRef:""};
+async function loginAsPublisher(affiliateId, name){
+  if(!confirm("Login as publisher: "+name+"?"))return;
+  const r=await fetch("/api/impersonate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({affiliateId,type:"affiliate"})});
+  const d=await r.json();
+  if(!r.ok){alert(d.error||"Error");return;}
+  window.location.replace("/dashboard");
+}
+
 export default function ManagePublishers(){
   const [affiliates,setAffiliates]=useState([]);
   const [loading,setLoading]=useState(true);

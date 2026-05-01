@@ -3,6 +3,14 @@ import { useEffect, useState } from "react";
 import { Plus, Search, Pencil, Trash2, Copy, CheckCircle, XCircle, Info } from "lucide-react";
 import { Badge, PageHeader, Spinner, Modal } from "@/components/ui";
 const EMPTY={name:"",email:"",password:"",company:"",phone:"",status:"Active",advertiserRef:""};
+async function loginAsAdvertiser(userId, name){
+  if(!confirm("Login as advertiser: "+name+"?"))return;
+  const r=await fetch("/api/impersonate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId,type:"user"})});
+  const d=await r.json();
+  if(!r.ok){alert(d.error||"Error");return;}
+  window.location.replace("/dashboard");
+}
+
 export default function ManageAdvertisers(){
   const [users,setUsers]=useState([]);
   const [loading,setLoading]=useState(true);
