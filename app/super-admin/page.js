@@ -1,6 +1,6 @@
 "use client";
 import{useEffect,useState}from"react";
-import{CheckCircle,XCircle,AlertCircle,Search,Users,DollarSign,Activity}from"lucide-react";
+import{CheckCircle,XCircle,AlertCircle,Search,Users,DollarSign,Activity,LogIn}from"lucide-react";
 
 const PLAN_COLORS={trial:"text-slate-400",starter:"text-blue-400",growth:"text-orange-400",enterprise:"text-purple-400"};
 const PLAN_LIMITS={trial:50000,starter:1000000,growth:10000000,enterprise:999999999};
@@ -34,6 +34,16 @@ export default function SuperAdmin(){
   const[modal,setModal]=useState(null);
   const[suspendReason,setSuspendReason]=useState("");
   const[planChange,setPlanChange]=useState("");
+  const[impersonating,setImpersonating]=useState({});
+  const loginAs=async(org)=>{
+    if(!confirm(`Login as ${org.name}?`))return;
+    setImpersonating(p=>({...p,[org._id]:true}));
+    const r=await fetch("/api/organizations/impersonate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({organizationId:org._id})});
+    const d=await r.json();
+    if(!r.ok){alert(d.error||"Error");setImpersonating(p=>({...p,[org._id]:false}));return;}
+    window.open(`/login/${d.slug}`,"_blank");
+    setImpersonating(p=>({...p,[org._id]:false}));
+  };
 
   const load=async()=>{
     setLoading(true);
@@ -100,6 +110,7 @@ export default function SuperAdmin(){
                 {org.status==="Active"&&<button onClick={()=>setModal({type:"suspend",org})} className="px-2.5 py-1.5 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/30 text-xs font-semibold">Suspend</button>}
                 {org.status==="Suspended"&&<button onClick={()=>handle(org._id,{status:"Active"})} className="px-2.5 py-1.5 rounded-lg bg-green-500/15 text-green-400 border border-green-500/30 text-xs font-semibold">Reactivate</button>}
                 <button onClick={()=>setModal({type:"plan",org})} className="px-2.5 py-1.5 rounded-lg bg-purple-500/15 text-purple-400 border border-purple-500/30 text-xs font-semibold">Plan</button>
+                        <button onClick={()=>loginAs(org)} disabled={impersonating[org._id]||org.status!=="Active"} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/30 text-xs font-semibold disabled:opacity-40"><LogIn size={11}/>{impersonating[org._id]?"…":"Login"}</button>
               </div></td>
             </tr>
           ))}</tbody>
