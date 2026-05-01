@@ -1,3 +1,19 @@
+
+"use client";
+import{useSession,signOut}from"next-auth/react";
+function ImpersonationBanner(){
+  const{data:session}=useSession();
+  if(!session?.user?.impersonatedBy)return null;
+  return(
+    <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <span className="text-amber-400 text-sm font-bold">👁️ Viewing as {session.user.name}</span>
+        <span className="text-slate-500 text-xs">· Impersonated by super admin</span>
+      </div>
+      <button onClick={()=>signOut({callbackUrl:"/super-admin"})} className="text-xs text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg hover:bg-amber-500/20 font-semibold">Exit → Back to Super Admin</button>
+    </div>
+  );
+}
 "use client";
 import { useState } from "react";
 import { useSession } from "next-auth/react";

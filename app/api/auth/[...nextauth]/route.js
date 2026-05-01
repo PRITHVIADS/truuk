@@ -48,6 +48,7 @@ export const authOptions = {
         token.status = user.status;
         token.isSuperAdmin = user.isSuperAdmin || false;
         token.organizationId = user.organizationId || null;
+        token.impersonatedBy = user.impersonatedBy || null;
       }
       return token;
     },
@@ -58,6 +59,7 @@ export const authOptions = {
       session.user.status = token.status;
       session.user.isSuperAdmin = token.isSuperAdmin || false;
       session.user.organizationId = token.organizationId || null;
+      session.user.impersonatedBy = token.impersonatedBy || null;
       return session;
     },
   },
