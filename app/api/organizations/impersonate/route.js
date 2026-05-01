@@ -21,3 +21,32 @@ export async function POST(req){
     return response;
   }catch(err){return NextResponse.json({error:err.message},{status:500});}
 }
+EOF~
+python3 << 'EOF'
+with open('app/super-admin/page.js','r') as f:
+    c = f.read()
+
+old = '''  const loginAs=async(org)=>{
+    if(!confirm(`Enter ${org.name} dashboard as super admin?`))return;
+    setImpersonating(p=>({...p,[org._id]:true}));
+    const r=await fetch("/api/organizations/impersonate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({organizationId:org._id})});
+    const d=await r.json();
+    if(!r.ok){alert(d.error||"Error");setImpersonating(p=>({...p,[org._id]:false}));return;}
+    // Redirect to their dashboard directly - no password needed
+    window.location.href="/dashboard";
+  };'''
+
+new = '''  const loginAs=async(org)=>{
+    if(!confirm(`Enter ${org.name} dashboard as super admin?`))return;
+    setImpersonating(p=>({...p,[org._id]:true}));
+    const r=await fetch("/api/organizations/impersonate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({organizationId:org._id})});
+    const d=await r.json();
+    if(!r.ok){alert(d.error||"Error");setImpersonating(p=>({...p,[org._id]:false}));return;}
+    // Force full page reload to pick up new session cookie
+    window.location.replace("/dashboard");
+  };'''
+
+c = c.replace(old, new)
+with open('app/super-admin/page.js','w') as f:
+    f.write(c)
+print("Done!")
