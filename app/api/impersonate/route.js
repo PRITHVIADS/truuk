@@ -16,9 +16,10 @@ export async function POST(req){
     }
     if(!targetEmail)return NextResponse.json({error:"Target not found"},{status:404});
     const token=await encode({token:{id:targetUser?._id?.toString(),email:targetEmail,name:targetName,role:targetRole,status:"Active",isSuperAdmin:false,organizationId:targetOrgId,impersonatedBy:session.user.email,impersonatedByRole:session.user.isSuperAdmin?"superadmin":"admin"},secret:process.env.NEXTAUTH_SECRET});
-    const cookieName=process.env.NODE_ENV==="production"?"__Secure-next-auth.session-token":"next-auth.session-token";
+    // set both cookie names
     const response=NextResponse.json({success:true,name:targetName,role:targetRole});
-    response.cookies.set(cookieName,token,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60});
+    response.cookies.set("__Secure-next-auth.session-token",token,{httpOnly:true,secure:true,sameSite:"lax",path:"/",maxAge:3600});
+    response.cookies.set("next-auth.session-token",token,{httpOnly:true,secure:false,sameSite:"lax",path:"/",maxAge:3600});
     return response;
   }catch(err){return NextResponse.json({error:err.message},{status:500});}
 }
