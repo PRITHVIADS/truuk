@@ -22,7 +22,6 @@ export async function GET(req){
     const result=orgs.map(o=>({...o,subscription:subMap[o._id.toString()]||null}));
     return NextResponse.json({organizations:result});
   }catch(err){
-    console.error("Org GET error:",err);
     return NextResponse.json({error:err.message},{status:500});
   }
 }
@@ -32,8 +31,7 @@ export async function PATCH(req){
     const session=await getServerSession(authOptions);
     if(!session)return NextResponse.json({error:"Unauthorized"},{status:401});
     await connectDB();
-    const body=await req.json();
-    const{id,status,plan,notes,suspendReason}=body;
+    const{id,status,plan,notes,suspendReason}=await req.json();
     const org=await Organization.findById(id);
     if(!org)return NextResponse.json({error:"Not found"},{status:404});
     const prevStatus=org.status;
@@ -41,22 +39,25 @@ export async function PATCH(req){
     if(plan)org.plan=plan;
     if(notes!==undefined)org.notes=notes;
     if(suspendReason)org.suspendReason=suspendReason;
-    if(status==="Active"&&prevStatus!=="Active"){org.approvedAt=new Date();}
+    if(status==="Active"&&prevStatus!=="Active")org.approvedAt=new Date();
     if(status==="Suspended")org.suspendedAt=new Date();
     await org.save();
     if(plan){
       const PLANS={trial:{clicks:50000,duration:14},starter:{clicks:1000000,duration:30},growth:{clicks:10000000,duration:30},enterprise:{clicks:999999999,duration:30}};
-      const planConfig=PLANS[plan];
-      const endDate=new Date(Date.now()+planConfig.duration*24*60*60*1000);
-      await Subscription.findOneAndUpdate({organizationId:id},{plan,clickLimit:planConfig.clicks,endDate,status:"active"},{upsert:true});
+      const pc=PLANS[plan];
+      const endDate=new Date(Date.now()+pc.duration*24*60*60*1000);
+      await Subscription.findOneAndUpdate(
+        {organizationId:id},
+        {plan,clickLimit:pc.clicks,endDate,status:"active"},
+        {upsert:true}
+      );
     }
     if(status==="Active"&&prevStatus!=="Active"){
       await User.findByIdAndUpdate(org.ownerId,{status:"Active"});
     }
-    return NextResponse.json({success:true,organization:org});
+    return NextResponse.json({success:true});
   }catch(err){
-    console.error("Org PATCH error:",err);
     return NextResponse.json({error:err.message},{status:500});
   }
 }
-// refreshed
+// v4
