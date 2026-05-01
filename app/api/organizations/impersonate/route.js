@@ -17,7 +17,17 @@ export async function POST(req){
     const owner=await User.findById(org.ownerId).lean();
     if(!owner)return NextResponse.json({error:"Owner not found"},{status:404});
     const token=await encode({
-      token:{id:owner._id.toString(),email:owner.email,name:owner.name,role:owner.role,status:"Active",isSuperAdmin:false,organizationId:org._id.toString(),impersonatedBy:session.user.email,impersonatedByRole:"superadmin"},
+      token:{
+        id:owner._id.toString(),
+        email:owner.email,
+        name:owner.name,
+        role:owner.role,
+        status:"Active",
+        isSuperAdmin:false,
+        organizationId:org._id.toString(),
+        impersonatedBy:session.user.email,
+        impersonatedByRole:"superadmin"
+      },
       secret:process.env.NEXTAUTH_SECRET
     });
     const response=NextResponse.json({success:true});
