@@ -102,7 +102,7 @@ function NavItem({ item, depth=0 }) {
     return (
       <div>
         <button onClick={() => setOpen(p=>!p)}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${isActive ? "text-orange-400 bg-orange-500/10" : "text-slate-300 hover:text-white hover:bg-white/5"}`}>
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${isActive ? "text-orange-400 bg-orange-500/10" : "text-white/70 hover:text-white hover:bg-white/10"}`}>
           {item.icon && <item.icon size={17} className="flex-shrink-0"/>}
           <span className="flex-1 text-left">{item.label}</span>
           {open ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
@@ -111,7 +111,7 @@ function NavItem({ item, depth=0 }) {
           <div className="ml-6 mt-0.5 space-y-0.5 border-l border-white/5 pl-3">
             {item.children.map(child => (
               <Link key={child.href} href={child.href}
-                className={`block px-3 py-2 rounded-lg text-xs font-semibold transition-all ${pathname===child.href || pathname.startsWith(child.href) ? "text-orange-400 bg-orange-500/10" : "text-slate-300 hover:text-white hover:bg-white/5"}`}>
+                className={`block px-3 py-2 rounded-lg text-xs font-semibold transition-all ${pathname===child.href || pathname.startsWith(child.href) ? "text-orange-400 bg-orange-500/10" : "text-white/70 hover:text-white hover:bg-white/10"}`}>
                 {child.label}
               </Link>
             ))}
@@ -124,7 +124,7 @@ function NavItem({ item, depth=0 }) {
   const active = pathname === item.href;
   return (
     <Link href={item.href}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${active ? "bg-orange-500/15 text-orange-400" : "text-slate-300 hover:text-white hover:bg-white/5"}`}>
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${active ? "bg-orange-500/15 text-orange-400" : "text-white/70 hover:text-white hover:bg-white/10"}`}>
       {item.icon && <item.icon size={17}/>}
       {item.label}
       {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-orange-500"/>}
@@ -152,7 +152,7 @@ export function Sidebar({ open, setOpen }) {
             </div>
             <div>
               <p className="text-white font-black text-base">Truuk</p>
-              <p className="text-slate-400 text-xs capitalize">{role} panel</p>
+              <p className="text-white/50 text-xs capitalize">{role} panel</p>
             </div>
           </div>
           <button onClick={()=>setOpen(false)} className="md:hidden text-slate-500 hover:text-white"><X size={18}/></button>
@@ -171,9 +171,9 @@ export function Sidebar({ open, setOpen }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-xs font-bold truncate">{session?.user?.name}</p>
-              <p className="text-slate-400 text-xs capitalize">{role}</p>
+              <p className="text-white/50 text-xs capitalize">{role}</p>
             </div>
-            <button onClick={()=>signOut({callbackUrl:"/login"})} className="text-slate-400 hover:text-red-400 transition-colors"><LogOut size={15}/></button>
+            <button onClick={()=>signOut({callbackUrl:"/login"})} className="text-white/50 hover:text-red-400 transition-colors"><LogOut size={15}/></button>
           </div>
         </div>
       </aside>
