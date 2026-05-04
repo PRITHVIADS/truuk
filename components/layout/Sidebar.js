@@ -102,7 +102,7 @@ function NavItem({ item, depth=0 }) {
     return (
       <div>
         <button onClick={() => setOpen(p=>!p)}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${isActive ? "text-orange-400 bg-orange-500/10" : "text-white/70 hover:text-white hover:bg-white/10"}`}>
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${isActive ? "text-white bg-white/10 border-l-2 border-orange-500" : "text-white/70 hover:text-white hover:bg-white/10"}`}>
           {item.icon && <item.icon size={17} className="flex-shrink-0"/>}
           <span className="flex-1 text-left">{item.label}</span>
           {open ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
@@ -111,7 +111,7 @@ function NavItem({ item, depth=0 }) {
           <div className="ml-6 mt-0.5 space-y-0.5 border-l border-white/5 pl-3">
             {item.children.map(child => (
               <Link key={child.href} href={child.href}
-                className={`block px-3 py-2 rounded-lg text-xs font-semibold transition-all ${pathname===child.href || pathname.startsWith(child.href) ? "text-orange-400 bg-orange-500/10" : "text-white/70 hover:text-white hover:bg-white/10"}`}>
+                className={`block px-3 py-2 rounded-lg text-xs font-semibold transition-all ${pathname===child.href || pathname.startsWith(child.href) ? "text-white bg-white/10 border-l-2 border-orange-500" : "text-white/70 hover:text-white hover:bg-white/10"}`}>
                 {child.label}
               </Link>
             ))}
@@ -124,7 +124,7 @@ function NavItem({ item, depth=0 }) {
   const active = pathname === item.href;
   return (
     <Link href={item.href}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${active ? "bg-orange-500/15 text-orange-400" : "text-white/70 hover:text-white hover:bg-white/10"}`}>
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${active ? "bg-white/10 text-white border-l-2 border-orange-500" : "text-white/70 hover:text-white hover:bg-white/10"}`}>
       {item.icon && <item.icon size={17}/>}
       {item.label}
       {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-orange-500"/>}
