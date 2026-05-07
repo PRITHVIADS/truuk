@@ -36,13 +36,13 @@ export default function SuperAdmin(){
   const[planChange,setPlanChange]=useState("");
   const[impersonating,setImpersonating]=useState({});
   const loginAs=async(org)=>{
-    if(!confirm(`Login as ${org.name}?`))return;
+    if(!confirm("Enter "+org.name+" dashboard?"))return;
     setImpersonating(p=>({...p,[org._id]:true}));
     const r=await fetch("/api/organizations/impersonate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({organizationId:org._id})});
     const d=await r.json();
     if(!r.ok){alert(d.error||"Error");setImpersonating(p=>({...p,[org._id]:false}));return;}
-    window.open(`/login/${d.slug}`,"_blank");
-    setImpersonating(p=>({...p,[org._id]:false}));
+    if(!d.token){alert("Error: "+JSON.stringify(d));setImpersonating(p=>({...p,[org._id]:false}));return;}
+    window.location.replace("/api/auth/impersonate?token="+d.token);
   };
 
   const load=async()=>{
