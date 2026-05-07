@@ -16,25 +16,38 @@ export async function POST(req){
     if(!org)return NextResponse.json({error:"Org not found"},{status:404});
     const owner=await User.findById(org.ownerId).lean();
     if(!owner)return NextResponse.json({error:"Owner not found"},{status:404});
+
+    const tokenData={
+      id:owner._id.toString(),
+      email:owner.email,
+      name:owner.name,
+      role:owner.role,
+      company:owner.company,
+      status:"Active",
+      isSuperAdmin:false,
+      organizationId:org._id.toString(),
+      impersonatedBy:session.user.email,
+      impersonatedByRole:"superadmin",
+    };
+
     const token=await encode({
-      token:{
-        id:owner._id.toString(),
-        email:owner.email,
-        name:owner.name,
-        role:owner.role,
-        status:"Active",
-        isSuperAdmin:false,
-        organizationId:org._id.toString(),
-        impersonatedBy:session.user.email,
-        impersonatedByRole:"superadmin"
-      },
-      secret:process.env.NEXTAUTH_SECRET
+      token:tokenData,
+      secret:process.env.NEXTAUTH_SECRET,
+      maxAge:3600,
     });
-    const response=NextResponse.json({success:true});
-    response.cookies.set("__Secure-next-auth.session-token",token,{httpOnly:true,secure:true,sameSite:"lax",path:"/",maxAge:3600});
-    response.cookies.set("next-auth.session-token",token,{httpOnly:true,secure:false,sameSite:"lax",path:"/",maxAge:3600});
+
+    const response=NextResponse.json({success:true,name:owner.name});
+    
+    // Try all possible cookie names
+    const cookieConfig={httpOnly:true,sameSite:"lax",path:"/",maxAge:3600};
+    response.cookies.set("next-auth.session-token",token,{...cookieConfig,secure:false});
+    response.cookies.set("__Secure-next-auth.session-token",token,{...cookieConfig,secure:true});
+    response.cookies.set("__Host-next-auth.session-token",token,{...cookieConfig,secure:true});
+    
     return response;
   }catch(err){
+    console.error("Impersonate error:",err);
     return NextResponse.json({error:err.message},{status:500});
   }
 }
+// v3
