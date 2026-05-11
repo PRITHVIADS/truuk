@@ -8,6 +8,9 @@ async function loginAsPublisher(affiliateId, name){
   const r=await fetch("/api/impersonate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({affiliateId,type:"affiliate"})});
   const d=await r.json();
   if(!r.ok){alert(d.error||"Error");return;}
+  const{signIn}=await import("next-auth/react");
+  const res=await signIn("credentials",{email:d.email,password:d.password,redirect:false});
+  if(res?.error){alert("Login failed");return;}
   window.location.replace("/dashboard");
 }
 
