@@ -76,7 +76,7 @@ export default function ManagePublishers(){
               <td className="py-3 px-4 text-xs text-slate-400">{a.paymentMethod||"—"}</td>
               <td className="py-3 px-4 text-sm text-slate-300">{a.clicks||0}</td>
               <td className="py-3 px-4 text-sm font-bold text-orange-400">{fmt(a.totalEarnings)}</td>
-              <td className="py-3 px-4"><div className="flex gap-1"><button onClick={()=>{setForm({...a,password:""});setSelected(a);setError("");setModal("edit");}} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white"><Pencil size={14}/></button><button onClick={()=>handleDelete(a._id)} className="p-1.5 rounded-lg hover:bg-red-500/20 text-slate-500 hover:text-red-400"><Trash2 size={14}/></button></div></td>
+              <td className="py-3 px-4"><div className="flex gap-1"><button onClick={()=>{setForm({...a,password:""});setSelected(a);setError("");setModal("edit");}} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white"><Pencil size={14}/></button><button onClick={()=>handleDelete(a._id)} className="p-1.5 rounded-lg hover:bg-red-500/20 text-slate-500 hover:text-red-400"><Trash2 size={14}/></button><button onClick={()=>loginAsPublisher(a._id,a.name)} className="px-2 py-1 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/30 text-xs font-bold hover:bg-blue-500/20">Login As</button></div></td>
             </tr>
           ))}</tbody>
         </table></div>
