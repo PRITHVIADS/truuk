@@ -72,7 +72,7 @@ export default function ManageAdvertisers(){
               <td className="py-3 px-4 text-sm text-slate-300">{u.company||"—"}</td>
               <td className="py-3 px-4"><Badge status={u.status}/></td>
               <td className="py-3 px-4 text-xs text-slate-500">{new Date(u.createdAt).toLocaleDateString("en-IN")}</td>
-              <td className="py-3 px-4"><div className="flex gap-1"><button onClick={()=>{setForm({...u,password:""});setSelected(u);setError("");setModal("edit");}} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white"><Pencil size={14}/></button><button onClick={()=>handleDelete(u._id)} className="p-1.5 rounded-lg hover:bg-red-500/20 text-slate-500 hover:text-red-400"><Trash2 size={14}/></button></div></td>
+              <td className="py-3 px-4"><div className="flex gap-1"><button onClick={()=>{setForm({...u,password:""});setSelected(u);setError("");setModal("edit");}} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white"><Pencil size={14}/></button><button onClick={()=>handleDelete(u._id)} className="p-1.5 rounded-lg hover:bg-red-500/20 text-slate-500 hover:text-red-400"><Trash2 size={14}/></button><button onClick={()=>loginAsAdvertiser(u._id,u.name)} className="px-2 py-1 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/30 text-xs font-bold hover:bg-blue-500/20">Login As</button></div></td>
             </tr>
           ))}</tbody>
         </table></div>
