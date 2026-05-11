@@ -41,8 +41,15 @@ export default function SuperAdmin(){
     const r=await fetch("/api/organizations/impersonate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({organizationId:org._id})});
     const d=await r.json();
     if(!r.ok){alert(d.error||"Error");setImpersonating(p=>({...p,[org._id]:false}));return;}
-    if(!d.token){alert("Error: "+JSON.stringify(d));setImpersonating(p=>({...p,[org._id]:false}));return;}
-    window.location.replace("/api/auth/impersonate?token="+d.token);
+    // Auto sign in with temp credentials
+    const{signIn}=await import("next-auth/react");
+    const res=await signIn("credentials",{
+      email:d.email,
+      password:d.password,
+      redirect:false,
+    });
+    if(res?.error){alert("Login failed: "+res.error);setImpersonating(p=>({...p,[org._id]:false}));return;}
+    window.location.replace("/dashboard");
   };
 
   const load=async()=>{
